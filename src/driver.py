@@ -43,7 +43,7 @@ def label_eval_test(input_dir, output_dir, evaluate):
 	if evaluate:
 		predictions = [r['grade'] for r in results]
 		accuracy = evaluate_accuracy(ground_truth, predictions)
-		print("Accuracy: {0:.2}%".format(accuracy * 100))
+		print("Accuracy: {0:.2f}%".format(accuracy * 100))
 
 
 def main():

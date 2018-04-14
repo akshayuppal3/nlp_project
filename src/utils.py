@@ -19,6 +19,7 @@ def store_results(results, filepath):
 		lines = []
 		for result in results:
 			line = ';'.join([str(result[k]) for k in order])
+			lines.append(line)
 		fout.write('\n'.join(lines))
 
 
