@@ -59,7 +59,7 @@ def main():
 	args = parser.parse_args()
 
 	setup_env()
-	if args.mode == 'test':
+	if args.function == 'test':
 		label_eval_test(args.input_dir, args.output_dir, args.evaluate)	
 	else:
 		train(args.input_dir, args.model_dir)
