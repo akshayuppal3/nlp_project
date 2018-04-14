@@ -1,5 +1,5 @@
 #!/bin/bash
 
-pip3 install nltk
+# pip3 install nltk
 
-python3 src/driver.py
+python3 src/driver.py -e
