@@ -12,7 +12,6 @@ def label_eval_test(input_dir, output_dir, evaluate):
 	ESSAY_DIR = 'essays'
 	IDX_FILE = 'index.csv'
 	OUT_FILE = 'results.txt'
-	TRAIN_DIR = 'training'
 	TEST_DIR = "testing"
 
 	test_essays_dir = os.path.join(input_dir, TEST_DIR, ESSAY_DIR)
@@ -46,17 +45,24 @@ def label_eval_test(input_dir, output_dir, evaluate):
 		print("Accuracy: {0:.2f}%".format(accuracy * 100))
 
 
+def train(input_dir, model_dir):
+	pass
+
+
 def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-i', '--input_dir', help='input directory containing training and test data', default='input')
 	parser.add_argument('-o', '--output_dir', help='output directory to store results in', default='output')
-	# parser.add_argument('-m', '--mode', help='whether to train or test', default='test')
+	parser.add_argument('-m', '--model_dir', help='directory to store all models', default='model')
+	parser.add_argument('-f', '--function', help='whether to train or test', default='test')
 	parser.add_argument('-e', '--evaluate', help='whether or not to perform evaluation', action='store_true')
 	args = parser.parse_args()
 
 	setup_env()
-	label_eval_test(args.input_dir, args.output_dir, args.evaluate)	
-
+	if args.mode == 'test':
+		label_eval_test(args.input_dir, args.output_dir, args.evaluate)	
+	else:
+		train(args.input_dir, args.model_dir)
 
 if __name__ == '__main__':
 	exit(main())
