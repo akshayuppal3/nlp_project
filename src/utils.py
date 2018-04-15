@@ -30,3 +30,9 @@ def evaluate_accuracy(gts, predictions):
 		if gt == predictions[idx]:
 			correct += 1
 	return correct / len(gts)
+
+#open file for read
+def open_file_read(filename):
+    fp = open(filename, 'r+')
+    data = fp.read()
+    return data

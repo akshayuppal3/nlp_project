@@ -1,6 +1,8 @@
 import nltk
 from essay import Essay
-
+from nltk.corpus import wordnet as wn
+from nltk.tokenize import word_tokenize
+from nltk.tokenize import sent_tokenize
 
 
 class EssayGrader:
@@ -13,7 +15,19 @@ class EssayGrader:
 
 	# A value between 0-4
 	def spell_score(self, e):
-		return 1
+		count_words = 0
+		spelling_error = 0
+		score = 0
+		sentences = sent_tokenize(e.data)
+		for sentence in sentences:
+			words= word_tokenize(sentence)
+			count_words += len(words)
+			for word in words:
+				if(not(wn.synsets(word))):
+					spelling_error += 1
+		score = spelling_error/count_words
+		score *= 4
+		return score
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def sv_agr_score(self, e):
