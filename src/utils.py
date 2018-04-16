@@ -1,7 +1,6 @@
 import csv
 
 
-
 # Function to load records from csv file
 def load_index(filepath):
 	records = []
