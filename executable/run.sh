@@ -2,4 +2,4 @@
 
 # pip3 install nltk
 
-python3 src/driver.py -e
+python3 driver.py -e

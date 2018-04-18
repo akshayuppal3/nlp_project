@@ -71,7 +71,7 @@ class EssayGrader:
 							score += 1
 			score = score/len(sentences)
 			score *= 5                  
-			return(score)
+			return score
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def verb_score(self, e):

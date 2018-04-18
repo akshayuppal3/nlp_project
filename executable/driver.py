@@ -51,9 +51,9 @@ def train(input_dir, model_dir):
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-i', '--input_dir', help='input directory containing training and test data', default='input')
-	parser.add_argument('-o', '--output_dir', help='output directory to store results in', default='output')
-	parser.add_argument('-m', '--model_dir', help='directory to store all models', default='model')
+	parser.add_argument('-i', '--input_dir', help='input directory containing training and test data', default='../input')
+	parser.add_argument('-o', '--output_dir', help='output directory to store results in', default='../output')
+	parser.add_argument('-m', '--model_dir', help='directory to store all models', default='../model')
 	parser.add_argument('-f', '--function', help='whether to train or test', default='test')
 	parser.add_argument('-e', '--evaluate', help='whether or not to perform evaluation', action='store_true')
 	args = parser.parse_args()
