@@ -84,14 +84,14 @@ def train(input_dir, output_dir, model_dir):
 		result['filename'] = filename
 		results.append(result)
 
-	# probs = EssayGrader.get_sub_verb_probs(essays)
-	# prob_filename = "sub_verb_probs.pkl"
-	# prob_filepath = os.path.join(model_dir, prob_filename)
-	# with open(prob_filepath, 'wb') as fout:
-	# 	pkl.dump(probs, fout)
+	probs = EssayGrader.get_sub_verb_probs(essays)
+	prob_filename = "sub_verb_probs.pkl"
+	prob_filepath = os.path.join(model_dir, prob_filename)
+	with open(prob_filepath, 'wb') as fout:
+		pkl.dump(probs, fout)
 
-	# with open('essay.pkl', 'wb') as fout:
-	# 	pkl.dump(essays, fout)
+	with open('essay.pkl', 'wb') as fout:
+		pkl.dump(essays, fout)
 
 	res_filepath = os.path.join(output_dir, RES_FILE)
 	store_results(results, res_filepath)

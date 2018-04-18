@@ -19,7 +19,7 @@ class EssayGrader:
 	# A function to compute probabilities for subject verb agreement pairs
 	@staticmethod
 	def get_sub_verb_probs(essays):
-		specific = {'PRP', 'WP', 'WDT', 'CD'}
+		specific = {'PRP', 'WP', 'WDT'}
 
 		sub_counts = {}
 		comb_counts = {}
