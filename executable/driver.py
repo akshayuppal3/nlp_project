@@ -71,9 +71,12 @@ def train(input_dir, output_dir, model_dir):
 		filepath = os.path.join(train_essays_dir, filename)
 		e = Essay(filepath, prompt, grade)
 		essays.append(e)
-		result = grader.grade(e)
-		result['filename'] = filename
-		results.append(result)
+		# result = grader.grade(e)
+		# result['filename'] = filename
+		# results.append(result)
+
+		print("one down")
+
 
 	res_filepath = os.path.join(output_dir, RES_FILE)
 	store_results(results, res_filepath)
