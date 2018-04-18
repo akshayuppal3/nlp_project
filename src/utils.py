@@ -32,6 +32,6 @@ def evaluate_accuracy(gts, predictions):
 
 #open file for read
 def open_file_read(filename):
-    fp = open(filename, 'r+')
+    fp = open(filename, 'r')
     data = fp.read()
     return data
