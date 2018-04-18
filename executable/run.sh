@@ -2,4 +2,4 @@
 
 # pip3 install nltk
 
-python3 driver.py -e
+python3 driver.py -f train -i ../alldata

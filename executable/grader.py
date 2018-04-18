@@ -21,12 +21,12 @@ class EssayGrader:
 	def length_score(self, e):
 		return 1
 
-	# A value between 0-4
+	# A value between 0-4, 0 means no error and 4 means all wo
 	def spell_score(self, e):
 		count_words = 0
 		spelling_error = 0
 		score = 0
-		sentences = sent_tokenize(e.data)
+		sentences = sent_tokenize(e.text)
 		for sentence in sentences:
 			words= word_tokenize(sentence)
 			count_words += len(words)
@@ -39,6 +39,7 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def sv_agr_score(self, e):
+		return 1
 		score = 0
 		sentences = sent_tokenize(e.data)
 		for sentence in sentences:

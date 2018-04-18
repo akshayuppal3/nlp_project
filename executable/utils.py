@@ -1,5 +1,6 @@
 import csv
-
+from nltk.corpus import wordnet
+import essay
 
 # Function to load records from csv file
 def load_index(filepath):
@@ -30,8 +31,22 @@ def evaluate_accuracy(gts, predictions):
 			correct += 1
 	return correct / len(gts)
 
-#open file for read
-def open_file_read(filename):
-    fp = open(filename, 'r')
-    data = fp.read()
-    return data
+
+# Read text file
+def read_txt_file(filepath):
+	with open(filepath) as fin:
+		return fin.read()
+
+
+# Check if a word belongs to english dictionary
+def is_english_word(word):
+	return wordnet.synsets(word)
+
+
+# Write essays to the CSV file
+def write_essays_tocsv(essays, filepath):
+	with open(filepath, 'w') as fout:
+		writer = csv.DictWriter(fout, fieldnames=essay.Essay.get_fields())
+		writer.writeheader()
+		for e in essays:
+			writer.writerow(e.to_dict())

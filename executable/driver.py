@@ -3,7 +3,7 @@ from essay import Essay
 from setup import setup_env
 import argparse
 import os
-from utils import load_index, store_results, evaluate_accuracy
+from utils import load_index, store_results, evaluate_accuracy, write_essays_tocsv
 
 
 
@@ -25,10 +25,12 @@ def label_eval_test(input_dir, output_dir, evaluate):
 	for record in index:
 		filename = record['filename']
 		prompt = record['prompt']
+		grade = record['grade'] if 'grade' in record else None
+
 		filepath = os.path.join(test_essays_dir, filename)
 		
 		# Grade, augment and store
-		e = Essay(filepath, prompt)
+		e = Essay(filepath, prompt, grade)
 		result = grader.grade(e)
 		result['filename'] = filename
 		results.append(result)
@@ -45,8 +47,39 @@ def label_eval_test(input_dir, output_dir, evaluate):
 		print("Accuracy: {0:.2f}%".format(accuracy * 100))
 
 
-def train(input_dir, model_dir):
-	pass
+def train(input_dir, output_dir, model_dir):
+	ESSAY_DIR = 'essays'
+	IDX_FILE = 'index.csv'
+	RES_FILE = 'results.txt'
+	ESS_FILE = 'essays.csv'
+	TRAIN_DIR = "training"
+	
+	train_essays_dir = os.path.join(input_dir, TRAIN_DIR, ESSAY_DIR)
+	train_idx_filepath = os.path.join(input_dir, TRAIN_DIR, IDX_FILE)
+
+	index = load_index(train_idx_filepath)
+	grader = EssayGrader()
+
+	essays = []
+	results = []
+	for record in index:
+		filename = record['filename']
+		prompt = record['prompt']
+		grade = record['grade']
+
+		# Grade, augment and store
+		filepath = os.path.join(train_essays_dir, filename)
+		e = Essay(filepath, prompt, grade)
+		essays.append(e)
+		result = grader.grade(e)
+		result['filename'] = filename
+		results.append(result)
+
+	res_filepath = os.path.join(output_dir, RES_FILE)
+	store_results(results, res_filepath)
+	csv_filepath = os.path.join(output_dir, ESS_FILE)
+	write_essays_tocsv(essays, csv_filepath)
+
 
 
 def main():
@@ -62,7 +95,7 @@ def main():
 	if args.function == 'test':
 		label_eval_test(args.input_dir, args.output_dir, args.evaluate)	
 	else:
-		train(args.input_dir, args.model_dir)
+		train(args.input_dir, args.output_dir, args.model_dir)
 
 if __name__ == '__main__':
 	exit(main())
