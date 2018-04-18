@@ -3,11 +3,50 @@ from essay import Essay
 import re
 from utils import is_english_word
 from nltk.corpus import stopwords
+import pickle as pkl
+import os
+import math
 
 
 class EssayGrader:
-	def __init__(self):
-		pass
+	def __init__(self, models_dir):
+		self.models_dir = models_dir
+
+		with open(os.path.join(models_dir, 'sub_verb_probs.pkl'), 'rb') as fin:
+			self.sub_verb_probs = pkl.load(fin)
+
+
+	# A function to compute probabilities for subject verb agreement pairs
+	@staticmethod
+	def get_sub_verb_probs(essays):
+		specific = {'PRP', 'WP', 'WDT', 'CD'}
+
+		sub_counts = {}
+		comb_counts = {}
+
+		for e in essays:
+			if e.grade == 'high':
+				for sub, stag, vb, vtag in e.get_sub_verb_tups():
+					smod_tag = stag
+					if stag in specific:
+						smod_tag = "{0}/{1}".format(sub.lower(), stag)
+
+					if not smod_tag in sub_counts:
+						sub_counts[smod_tag]  = 0
+
+					sub_counts[smod_tag] += 1
+
+					key = "{0}_{1}".format(smod_tag, vtag)
+					if not key in comb_counts:
+						comb_counts[key] = 0
+					comb_counts[key] += 1
+
+		probs = {}
+		for key in comb_counts:
+			probs[key] = comb_counts[key] / sub_counts[key.split('_')[0]]
+		return probs
+
+
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def length_score(self, e):
@@ -38,37 +77,23 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def sv_agr_score(self, e):
-		PRP_sing = ['He/PRP', 'he/PRP', 'She/PRP', 'she/PRP','It/PRP','it/PRP','That/DT','This/DT','this/DT','That/WDT']
-		PRP_non_sing = ['You/PRP', 'you/PRP', 'We/PRP','we/PRP', 'They/PRP' ,'they/PRP', 'These/DT' , 'these/DT' ,'Those/DT', 'those/DT', 'us/PRP']
+		PRP_sing = ['he/PRP', 'she/PRP','it/PRP','this/DT','that/WDT', 'which/WDT']
+		PRP_non_sing = ['you/PRP', 'we/PRP','they/PRP', 'these/DT', 'those/DT', 'us/PRP']
 
+		specific = {'PRP', 'WP', 'WDT', 'CD'}
 		score = 0
-		for idx, s in enumerate(e.sentences):
-			nsubj_flag = 0
-			for element in a:
-				if (element[0] == 'nsubj'):
-					verb_idx = element[1]
-					subject_idx = element[2]
-					nsubj_flag = 1
-			if (nsubj_flag == 1 ):        
-				
-
-				if (subject_tag == 'NN' or subject_tag == 'NNS'):
-					if (verb_tag == 'VBZ' and subject_tag == 'NNS'):          #cant have NNS-> VBZ
-						score += 1 
-					if (verb_tag == 'VBP' and subject_tag == 'NN'):           #cant have NN-> VBP
-						score += 1
-				elif (subject_tag == 'PRP'):
-					composite = subject + '/' + subject_tag                   #concatenate so that we can query PRP_SING 
-					if (verb_tag == 'VBZ'):
-						if composite in PRP_non_sing:                                #cant have they,you -> VBZ 
-							score += 1
-					elif (verb_tag == 'VBP'):                                 #cant have he,she -> VBP
-						if composite in PRP_sing:                                #cant have they,you -> VBZ 
-							score += 1
-			
-			score = scorev/vlen(sentences)
-			score *= 5                  
-			return score
+		tups = e.get_sub_verb_tups()
+		for sub, stag, vb, vtag in tups:
+			smod_tag = stag
+			if stag in specific:
+				smod_tag = "{0}/{1}".format(sub.lower(), stag)
+			key = "{0}_{1}".format(smod_tag, vtag)
+			prob = self.sub_verb_probs[key] if key in self.sub_verb_probs else 0.000001
+			if prob > 0.1:
+				score += 1
+		score = score / len(tups)
+		score = 1 + (score * 4)
+		return round(score, 2)
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def verb_score(self, e):

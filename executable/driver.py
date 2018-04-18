@@ -9,7 +9,7 @@ import pickle as pkl
 
 
 # Function to label examples in input directory and store results in output directory
-def label_eval_test(input_dir, output_dir, evaluate):
+def label_eval_test(input_dir, output_dir, model_dir, evaluate):
 	ESSAY_DIR = 'essays'
 	IDX_FILE = 'index.csv'
 	OUT_FILE = 'results.txt'
@@ -22,7 +22,7 @@ def label_eval_test(input_dir, output_dir, evaluate):
 	results = []
 	ground_truth = []
 
-	grader = EssayGrader()
+	grader = EssayGrader(model_dir)
 	for record in index:
 		filename = record['filename']
 		prompt = record['prompt']
@@ -59,15 +59,17 @@ def train(input_dir, output_dir, model_dir):
 	train_idx_filepath = os.path.join(input_dir, TRAIN_DIR, IDX_FILE)
 
 	index = load_index(train_idx_filepath)
-	grader = EssayGrader()
+	grader = EssayGrader(model_dir)
 
-	# essays = []
-
+	
+	# load essays
 	with open('essay.pkl', 'rb') as fin:
 		essays = pkl.load(fin)
 
+	# essays = []
 	results = []
 	for idx, record in enumerate(index):
+		print('---' * 10 )
 		filename = record['filename']
 		prompt = record['prompt']
 		grade = record['grade']
@@ -75,11 +77,18 @@ def train(input_dir, output_dir, model_dir):
 		# Grade, augment and store
 		filepath = os.path.join(train_essays_dir, filename)
 		# e = Essay(filepath, prompt, grade)
-		e = essays[idx]
 		# essays.append(e)
+
+		e = essays[idx]
 		result = grader.grade(e)
 		result['filename'] = filename
 		results.append(result)
+
+	# probs = EssayGrader.get_sub_verb_probs(essays)
+	# prob_filename = "sub_verb_probs.pkl"
+	# prob_filepath = os.path.join(model_dir, prob_filename)
+	# with open(prob_filepath, 'wb') as fout:
+	# 	pkl.dump(probs, fout)
 
 	# with open('essay.pkl', 'wb') as fout:
 	# 	pkl.dump(essays, fout)

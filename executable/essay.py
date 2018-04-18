@@ -77,6 +77,23 @@ class Essay():
 			dep_parse.append(self.snlp.dependency_parse(s))
 		return dep_parse
 
+	def get_sub_verb_tups(self):
+		valid_sub = {'PRP', 'NNS', 'NN', 'NNP', 'WP', 'WDT', 'CD', 'NNPS'}
+		tups = []
+		for idx, s in enumerate(self.sentences):
+			for element in self.dep_parse[idx]:
+				if (element[0] == 'nsubj' or element[0] == 'nsubjpass'):
+					verb_idx = element[1] - 1
+					subject_idx = element[2] - 1
+					verb_tag = self.pos_tags[idx][verb_idx]
+					subject_tag = self.pos_tags[idx][subject_idx]
+					subject = self.words[idx][subject_idx]
+					verb = self.words[idx][verb_idx]
+					if re.match("VB*", verb_tag) and subject_tag in valid_sub:
+						tups.append((subject, subject_tag, verb, verb_tag))
+		return tups
+
+
 
 	def to_dict(self):
 		data = {}
