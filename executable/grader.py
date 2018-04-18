@@ -1,16 +1,8 @@
 import nltk
 from essay import Essay
-from nltk.corpus import wordnet as wn
-from nltk.tokenize import word_tokenize
-from nltk.tokenize import sent_tokenize
-from nltk.tree import Tree
-from nltk.tree import ParentedTree
-from nltk import pos_tag
-from stanfordcorenlp import StanfordCoreNLP
-nlp = StanfordCoreNLP('http://corenlp.run', port=80)
-
-PRP_sing = ['He/PRP', 'he/PRP', 'She/PRP', 'she/PRP','It/PRP','it/PRP','That/DT','This/DT','this/DT','That/WDT']
-PRP_non_sing = ['You/PRP', 'you/PRP', 'We/PRP','we/PRP', 'They/PRP' ,'they/PRP', 'These/DT' , 'these/DT' ,'Those/DT', 'those/DT', 'us/PRP']
+import re
+from utils import is_english_word
+from nltk.corpus import stopwords
 
 
 class EssayGrader:
@@ -19,31 +11,38 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def length_score(self, e):
-		return 1
+		length = len(e.sentences)
+		score = 1 + (4 * (length / 30))
+		if score > 5:
+			score = 5
+		return round(score, 2)
+
 
 	# A value between 0-4, 0 means no error and 4 means all wo
 	def spell_score(self, e):
-		count_words = 0
-		spelling_error = 0
-		score = 0
-		sentences = sent_tokenize(e.text)
-		for sentence in sentences:
-			words= word_tokenize(sentence)
-			count_words += len(words)
-			for word in words:
-				if(not(wn.synsets(word))):
-					spelling_error += 1
-		score = spelling_error/count_words
+		valid_words = 0
+		mistakes = 0
+
+		en_stopwords = stopwords.words('english')
+
+		for w_list in e.words:
+			for w in w_list:
+				if re.match("^[A-Za-z]+$", w) and not w.lower() in en_stopwords:
+					if not is_english_word(w):
+						mistakes += 1
+					valid_words += 1
+		score = mistakes / valid_words
 		score *= 4
-		return score
+		return round(score, 2)
+
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def sv_agr_score(self, e):
-		return 1
+		PRP_sing = ['He/PRP', 'he/PRP', 'She/PRP', 'she/PRP','It/PRP','it/PRP','That/DT','This/DT','this/DT','That/WDT']
+		PRP_non_sing = ['You/PRP', 'you/PRP', 'We/PRP','we/PRP', 'They/PRP' ,'they/PRP', 'These/DT' , 'these/DT' ,'Those/DT', 'those/DT', 'us/PRP']
+
 		score = 0
-		sentences = sent_tokenize(e.data)
-		for sentence in sentences:
-			a = nlp.dependency_parse(sentence)
+		for idx, s in enumerate(e.sentences):
 			nsubj_flag = 0
 			for element in a:
 				if (element[0] == 'nsubj'):
@@ -51,12 +50,8 @@ class EssayGrader:
 					subject_idx = element[2]
 					nsubj_flag = 1
 			if (nsubj_flag == 1 ):        
-				#tokenize the sentence    
-				words = word_tokenize(sentence)
-				tagged_words = pos_tag(words)
-				#check the tag of the words
-				verb, verb_tag = tagged_words[verb_idx - 1]
-				subject, subject_tag = tagged_words[subject_idx - 1]
+				
+
 				if (subject_tag == 'NN' or subject_tag == 'NNS'):
 					if (verb_tag == 'VBZ' and subject_tag == 'NNS'):          #cant have NNS-> VBZ
 						score += 1 
@@ -70,7 +65,8 @@ class EssayGrader:
 					elif (verb_tag == 'VBP'):                                 #cant have he,she -> VBP
 						if composite in PRP_sing:                                #cant have they,you -> VBZ 
 							score += 1
-			score = score/len(sentences)
+			
+			score = scorev/vlen(sentences)
 			score *= 5                  
 			return score
 
@@ -105,7 +101,7 @@ class EssayGrader:
 		score = 0
 		for key in result:
 			score += result[key] * weights[key]
-		return score
+		return round(score, 2)
 
 	# Either 'low' or 'high' based on 
 	def label(self, score):
@@ -133,6 +129,9 @@ class EssayGrader:
 		# Aggregates
 		result['final'] = self.final_score(result)
 		result['grade'] = self.label(result['final'])
+
+		# TODO: Remove this
+		result['grade'] = e.grade
 
 		return result
 

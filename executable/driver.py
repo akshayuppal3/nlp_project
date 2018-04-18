@@ -4,6 +4,7 @@ from setup import setup_env
 import argparse
 import os
 from utils import load_index, store_results, evaluate_accuracy, write_essays_tocsv
+import pickle as pkl
 
 
 
@@ -60,23 +61,28 @@ def train(input_dir, output_dir, model_dir):
 	index = load_index(train_idx_filepath)
 	grader = EssayGrader()
 
-	essays = []
+	# essays = []
+
+	with open('essay.pkl', 'rb') as fin:
+		essays = pkl.load(fin)
+
 	results = []
-	for record in index:
+	for idx, record in enumerate(index):
 		filename = record['filename']
 		prompt = record['prompt']
 		grade = record['grade']
 
 		# Grade, augment and store
 		filepath = os.path.join(train_essays_dir, filename)
-		e = Essay(filepath, prompt, grade)
-		essays.append(e)
-		# result = grader.grade(e)
-		# result['filename'] = filename
-		# results.append(result)
+		# e = Essay(filepath, prompt, grade)
+		e = essays[idx]
+		# essays.append(e)
+		result = grader.grade(e)
+		result['filename'] = filename
+		results.append(result)
 
-		print("one down")
-
+	# with open('essay.pkl', 'wb') as fout:
+	# 	pkl.dump(essays, fout)
 
 	res_filepath = os.path.join(output_dir, RES_FILE)
 	store_results(results, res_filepath)

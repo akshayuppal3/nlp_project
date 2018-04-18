@@ -88,12 +88,15 @@ class Essay():
 		pos_strs = []
 		for i in range(len(self.words)):
 			pos_strs.append(" ".join(["{0}/{1}".format(self.words[i][j], self.pos_tags[i][j]) for j in range(len(self.words[i]))]))
+		data['words'] = '\n\n'.join([word_str for word_str in [' '.join(w) for w in self.words]])
 		data['pos'] = '\n\n'.join(pos_strs)
+		data['syn'] = '\n\n'.join(self.syn_parse)
+		data['dep'] = '\n\n'.join([str(d) for d in self.dep_parse])
 		return data
 
 	@staticmethod
 	def get_fields():
-		return ['filepath', 'prompt', 'grade', 'text', 'sentences', 'pos']
+		return ['filepath', 'prompt', 'grade', 'text', 'sentences', 'words', 'pos', 'syn', 'dep']
 
 
 	def __init__(self, filepath, prompt, grade=None):
