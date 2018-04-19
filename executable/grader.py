@@ -161,15 +161,15 @@ class EssayGrader:
 		
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def form_score(self, e):
-		return 1
+		return 0
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def cohr_score(self, e):
-		return 1
+		return 0
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def topic_score(self, e):
-		return 1
+		return 0
 
 	# A linear combination of all scores
 	def final_score(self, result):
@@ -216,7 +216,7 @@ class EssayGrader:
 		result['grade'] = self.label(result['final'])
 
 		# TODO: Remove this
-		result['grade'] = e.grade
+		# result['grade'] = e.grade
 
 		return result
 
