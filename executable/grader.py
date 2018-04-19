@@ -15,6 +15,9 @@ class EssayGrader:
 		with open(os.path.join(models_dir, 'sub_verb_probs.pkl'), 'rb') as fin:
 			self.sub_verb_probs = pkl.load(fin)
 
+		with open(os.path.join(models_dir, 'verb_ctx_probs.pkl'), 'rb') as fin:
+			self.verb_ctx_probs = pkl.load(fin)
+
 
 	# A function to compute probabilities for subject verb agreement pairs
 	@staticmethod
@@ -44,6 +47,46 @@ class EssayGrader:
 		probs = {}
 		for key in comb_counts:
 			probs[key] = comb_counts[key] / sub_counts[key.split('_')[0]]
+		return probs
+
+
+	@staticmethod
+	def _get_key(tup):
+		word, pos = tup
+		cwords = {'not', 'i', 'we', 'you', 'they', 'he', 'she', 'it', 'is' 'am', 'are', 'has', 'have', 'be', 'been', 'will', 'shall', 'had'}
+		if word.lower() in cwords:
+			return "{0}/{1}".format(word.lower(), pos)
+		return pos
+
+
+	# A function to compute bigram probabilities in the context of a verb
+	@staticmethod
+	def get_verb_context_probs(essays):
+		sub_counts = {}
+		comb_counts = {}
+
+		for e in essays:
+			if e.grade == 'high':
+				contexts = e.get_verb_contexts()
+				for context in contexts:
+					for i in range(len(context) - 1):
+						first, second = context[i], context[i + 1]
+						first_key = EssayGrader._get_key(first)
+						second_key = EssayGrader._get_key(second)
+
+						for key in (first_key, second_key):
+							if not key in sub_counts:
+								sub_counts[key] = 0
+							sub_counts[key] += 1
+
+						comp_key = "{0}_{1}".format(first_key, second_key)
+						if not comp_key in comb_counts:
+							comb_counts[comp_key] = 0
+						comb_counts[comp_key] += 1
+		
+		probs = {}
+		for key in comb_counts:
+			probs[key] = comb_counts[key] / sub_counts[key.split("_")[0]]
 		return probs
 
 
@@ -97,8 +140,25 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def verb_score(self, e):
-		return 1
+		num_bigrams = 0
+		score = 0
+		contexts = e.get_verb_contexts()
+		for context in contexts:
+			for i in range(len(context) - 1):
+				first, second = context[i], context[i + 1]
+				first_key = EssayGrader._get_key(first)
+				second_key = EssayGrader._get_key(second)
+				comp_key = "{0}_{1}".format(first_key, second_key)
+				prob = self.verb_ctx_probs[comp_key] if comp_key in self.verb_ctx_probs else 0.000001
+				if prob > 0.04:
+					score += 1
+				num_bigrams += 1
 
+		score = score / num_bigrams
+		score = 1 + (score * 4)
+		return round(score, 2)
+
+		
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def form_score(self, e):
 		return 1
@@ -128,7 +188,7 @@ class EssayGrader:
 			score += result[key] * weights[key]
 		return round(score, 2)
 
-	# Either 'low' or 'high' based on 
+	# Either 'low' or 'high' based on the final score
 	def label(self, score):
 		return 'unknown'
 

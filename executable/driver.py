@@ -59,30 +59,30 @@ def train(input_dir, output_dir, model_dir):
 	train_idx_filepath = os.path.join(input_dir, TRAIN_DIR, IDX_FILE)
 
 	index = load_index(train_idx_filepath)
-	grader = EssayGrader(model_dir)
+	# grader = EssayGrader(model_dir)
 
 	
 	# load essays
-	with open('essay.pkl', 'rb') as fin:
-		essays = pkl.load(fin)
+	# with open('essay.pkl', 'rb') as fin:
+	# 	essays = pkl.load(fin)
 
-	# essays = []
+	essays = []
 	results = []
 	for idx, record in enumerate(index):
-		print('---' * 10 )
+		# print('---' * 10 )
 		filename = record['filename']
 		prompt = record['prompt']
 		grade = record['grade']
 
 		# Grade, augment and store
 		filepath = os.path.join(train_essays_dir, filename)
-		# e = Essay(filepath, prompt, grade)
-		# essays.append(e)
+		e = Essay(filepath, prompt, grade)
+		essays.append(e)
 
-		e = essays[idx]
-		result = grader.grade(e)
-		result['filename'] = filename
-		results.append(result)
+		# e = essays[idx]
+		# result = grader.grade(e)
+		# result['filename'] = filename
+		# results.append(result)
 
 	probs = EssayGrader.get_sub_verb_probs(essays)
 	prob_filename = "sub_verb_probs.pkl"
@@ -90,11 +90,15 @@ def train(input_dir, output_dir, model_dir):
 	with open(prob_filepath, 'wb') as fout:
 		pkl.dump(probs, fout)
 
-	with open('essay.pkl', 'wb') as fout:
-		pkl.dump(essays, fout)
+	probs = EssayGrader.get_verb_context_probs(essays)
+	prob_filename = "verb_ctx_probs.pkl"
+	prob_filepath = os.path.join(model_dir, prob_filename)
+	with open(prob_filepath, 'wb') as fout:
+		pkl.dump(probs, fout)
 
-	res_filepath = os.path.join(output_dir, RES_FILE)
-	store_results(results, res_filepath)
+
+	# res_filepath = os.path.join(output_dir, RES_FILE)
+	# store_results(results, res_filepath)
 	csv_filepath = os.path.join(output_dir, ESS_FILE)
 	write_essays_tocsv(essays, csv_filepath)
 
@@ -111,7 +115,7 @@ def main():
 
 	setup_env()
 	if args.function == 'test':
-		label_eval_test(args.input_dir, args.output_dir, args.evaluate)	
+		label_eval_test(args.input_dir, args.output_dir, args.model_dir, args.evaluate)	
 	else:
 		train(args.input_dir, args.output_dir, args.model_dir)
 

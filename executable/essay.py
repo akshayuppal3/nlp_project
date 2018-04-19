@@ -94,6 +94,38 @@ class Essay():
 		return tups
 
 
+	def get_verb_contexts(self):
+		contexts = []
+		for idx, s in enumerate(self.sentences):
+			verb_idx = []
+			for v_idx, tag in enumerate(self.pos_tags[idx]):
+				if re.match("VB*", tag) and v_idx != 0:
+					verb_idx.append(v_idx)
+			
+			intervals = []
+			for i in verb_idx:
+			 	start = i - 1
+			 	if start < 0:
+			 		start = 0
+			 	intervals.append((start, i))
+
+			if len(intervals) > 0:
+				new_intervals = [intervals[0]]
+				for i in range(1, len(intervals)):
+					prev, current = new_intervals[-1], intervals[i]
+					if current[0] <= prev[1]: 
+						new_intervals[-1] = (new_intervals[-1][0], max(prev[1], current[1]))
+					else:
+						new_intervals.append(current[:])
+
+				for interval in new_intervals:
+					start, end = interval
+					context = [(self.words[idx][i], self.pos_tags[idx][i])for i in range(start, end + 1)]
+					contexts.append(context)
+		return contexts
+
+
+
 
 	def to_dict(self):
 		data = {}
@@ -107,13 +139,13 @@ class Essay():
 			pos_strs.append(" ".join(["{0}/{1}".format(self.words[i][j], self.pos_tags[i][j]) for j in range(len(self.words[i]))]))
 		data['words'] = '\n\n'.join([word_str for word_str in [' '.join(w) for w in self.words]])
 		data['pos'] = '\n\n'.join(pos_strs)
-		data['syn'] = '\n\n'.join(self.syn_parse)
+		# data['syn'] = '\n\n'.join(self.syn_parse)
 		data['dep'] = '\n\n'.join([str(d) for d in self.dep_parse])
 		return data
 
 	@staticmethod
 	def get_fields():
-		return ['filepath', 'prompt', 'grade', 'text', 'sentences', 'words', 'pos', 'syn', 'dep']
+		return ['filepath', 'prompt', 'grade', 'text', 'sentences', 'words', 'pos', 'dep']
 
 
 	def __init__(self, filepath, prompt, grade=None):
@@ -125,7 +157,7 @@ class Essay():
 		self.sentences = self._get_sentences()
 		self.words = self._get_words()
 		self.pos_tags = self._get_pos()
-		self.syn_parse = self._get_synparse()
+		# self.syn_parse = self._get_synparse()
 		self.dep_parse = self._get_depparse()
 
 
