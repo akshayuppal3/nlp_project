@@ -5,14 +5,14 @@ Name 2: auppal8@uic.edu
 ---------------------------------------------------------Setup------------------------------------------------------------
 
 1) Download StanfordCoreNLP zip file from https://stanfordnlp.github.io/CoreNLP/download.html
-2) Extract the zip file in ROOT/resources
-3) Navigate to ROOT/resources/stanford-corenlp-full-2018-02-27 (The zip file you just extracted)
+2) Extract the zip file in ROOT/executable/resources
+3) Navigate to ROOT/executable/resources/stanford-corenlp-full-2018-02-27 (The zip file you just extracted)
 3) Run the StanfordCoreNLP parser or port 8080 using the following command:
    
    java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 8080 -timeout 15000
    
 4) Open a new terminal window/tab
-5) Navigate to ROOT/execution folder
+5) Navigate to ROOT/executable folder
 6) Give the following shell command to produce results.txt in output folder (~2-3 seconds per essay)
    
    sh run.sh
