@@ -7,7 +7,7 @@ Name 2: auppal8@uic.edu
 1) Download StanfordCoreNLP zip file from https://stanfordnlp.github.io/CoreNLP/download.html
 2) Extract the zip file in ROOT/resources
 3) Navigate to ROOT/resources/stanford-corenlp-full-2018-02-27 (The zip file you just extracted)
-3) Run the StanfordCoreNLP parser using the following command on port 8080:
+3) Run the StanfordCoreNLP parser or port 8080 using the following command:
    
    java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 8080 -timeout 15000
    
