@@ -13,7 +13,7 @@ Name 2: auppal8@uic.edu
    
 4) Open a new terminal window/tab, go inside ROOT/executable
 5) Navigate to ROOT/execution folder
-6) Give the following shell command to produce results.txt in output folder
+6) Give the following shell command to produce results.txt in output folder (~2-3 seconds per essay)
    
    sh run.sh
    
@@ -47,5 +47,8 @@ We also treat prepositions and wh pronouns as a special case, where we consider 
 
 PART C(ii)
 ==========
-In this part we first identify all the verbs in every sentenece and then we extract the context surrounding the verb. This gives us a list of intervals, we merge these intervals to get longer non-overlapping segments of (token, pos_tag) tuples. We compute the probabilities of bigrams for high quality essays 
+In this part we first identify all the verbs in the essay and then we extract the context surrounding the verb. This gives us a list of intervals, we merge these intervals to get longer non-overlapping segments of (token, pos_tag) tuples. We compute the probabilities of bigrams for high quality essays and we train a set of words in the same way as we treat prepositions in Part C(i). This set of word contains words like (has, am, I, are etc). This ensures that cases like "I am going" have high probability than "I are go". We normalize the score and scale it between 1 to 5.
+
+
+NOTE: For all of these scores, we can see the difference between low and high classes on average as reported in ROOT/output/results.txt included in the folder. With more data our probabilistic approach for part C(i) and C(ii) is expected to improve.
 
