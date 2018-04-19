@@ -21,8 +21,6 @@ Name 2: auppal8@uic.edu
    
     pip3 install nltk
     pip3 install stanfordcorenlp
-    pip3 install 
-
     python3 driver.py -f test
 
 
