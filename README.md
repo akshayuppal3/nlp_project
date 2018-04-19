@@ -11,7 +11,7 @@ Name 2: auppal8@uic.edu
    
    java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 8080 -timeout 15000
    
-4) Open a new terminal window/tab, go inside ROOT/executable
+4) Open a new terminal window/tab
 5) Navigate to ROOT/execution folder
 6) Give the following shell command to produce results.txt in output folder (~2-3 seconds per essay)
    
