@@ -3,6 +3,7 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 import re
 from stanfordcorenlp import StanfordCoreNLP
+from nltk.tree import Tree
 
 
 class Essay():
@@ -70,6 +71,12 @@ class Essay():
 		for s in self.sentences:
 			synparse.append(self.snlp.parse(s))
 		return synparse
+	
+	def _get_syntrees(self):
+		syn_trees = []
+		for s in self.sentences:
+			syn_trees.append(Tree.fromstring(self.snlp.parse(s)))
+		return syn_trees	
 
 	def _get_depparse(self):
 		dep_parse = []
