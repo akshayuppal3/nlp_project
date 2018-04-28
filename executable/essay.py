@@ -69,14 +69,8 @@ class Essay():
 	def _get_synparse(self):
 		synparse = []
 		for s in self.sentences:
-			synparse.append(self.snlp.parse(s))
+			synparse.append(Tree.fromstring(self.snlp.parse(s)))
 		return synparse
-	
-	def _get_syntrees(self):
-		syn_trees = []
-		for s in self.sentences:
-			syn_trees.append(Tree.fromstring(self.snlp.parse(s)))
-		return syn_trees	
 
 	def _get_depparse(self):
 		dep_parse = []
@@ -146,13 +140,13 @@ class Essay():
 			pos_strs.append(" ".join(["{0}/{1}".format(self.words[i][j], self.pos_tags[i][j]) for j in range(len(self.words[i]))]))
 		data['words'] = '\n\n'.join([word_str for word_str in [' '.join(w) for w in self.words]])
 		data['pos'] = '\n\n'.join(pos_strs)
-		# data['syn'] = '\n\n'.join(self.syn_parse)
+		data['syn'] = '\n\n'.join(self.syn_parse)
 		data['dep'] = '\n\n'.join([str(d) for d in self.dep_parse])
 		return data
 
 	@staticmethod
 	def get_fields():
-		return ['filepath', 'prompt', 'grade', 'text', 'sentences', 'words', 'pos', 'dep']
+		return ['filepath', 'prompt', 'grade', 'text', 'sentences', 'words', 'syn', 'pos', 'dep']
 
 
 	def __init__(self, filepath, prompt, grade=None):
@@ -164,7 +158,7 @@ class Essay():
 		self.sentences = self._get_sentences()
 		self.words = self._get_words()
 		self.pos_tags = self._get_pos()
-		# self.syn_parse = self._get_synparse()
+		self.syn_parse = self._get_synparse()
 		self.dep_parse = self._get_depparse()
 
 
