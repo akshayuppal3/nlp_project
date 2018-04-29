@@ -90,7 +90,7 @@ class Essay():
 					subject_tag = self.pos_tags[idx][subject_idx]
 					subject = self.words[idx][subject_idx]
 					verb = self.words[idx][verb_idx]
-					if re.match("VB*", verb_tag) and subject_tag in valid_sub:
+					if re.match("VB+", verb_tag) and subject_tag in valid_sub:
 						tups.append((subject, subject_tag, verb, verb_tag))
 		return tups
 
@@ -100,7 +100,7 @@ class Essay():
 		for idx, s in enumerate(self.sentences):
 			verb_idx = []
 			for v_idx, tag in enumerate(self.pos_tags[idx]):
-				if re.match("VB*", tag) and v_idx != 0:
+				if re.match("VB+", tag) and v_idx != 0:
 					verb_idx.append(v_idx)
 			
 			intervals = []
@@ -140,7 +140,7 @@ class Essay():
 			pos_strs.append(" ".join(["{0}/{1}".format(self.words[i][j], self.pos_tags[i][j]) for j in range(len(self.words[i]))]))
 		data['words'] = '\n\n'.join([word_str for word_str in [' '.join(w) for w in self.words]])
 		data['pos'] = '\n\n'.join(pos_strs)
-		data['syn'] = '\n\n'.join(self.syn_parse)
+		data['syn'] = '\n\n'.join([str(s) for s in self.syn_parse])
 		data['dep'] = '\n\n'.join([str(d) for d in self.dep_parse])
 		return data
 

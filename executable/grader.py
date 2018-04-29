@@ -6,6 +6,7 @@ from nltk.corpus import stopwords
 import pickle as pkl
 import os
 import math
+import numpy as np
 
 
 class EssayGrader:
@@ -17,6 +18,14 @@ class EssayGrader:
 
 		with open(os.path.join(models_dir, 'verb_ctx_probs.pkl'), 'rb') as fin:
 			self.verb_ctx_probs = pkl.load(fin)
+
+		with open(os.path.join(models_dir, 'conj_vb_probs.pkl'), 'rb') as fin:
+			self.conj_vb_probs = pkl.load(fin)
+
+		# @TODO Remove these in the end
+		self.high_scores = []
+		self.low_scores = []
+
 
 
 	# A function to compute probabilities for subject verb agreement pairs
@@ -157,11 +166,76 @@ class EssayGrader:
 		score = score / num_bigrams
 		score = 1 + (score * 4)
 		return round(score, 2)
+	
+	# Check for the presence of fragments
+	def _frag_present(self, tree):
+		for t in tree.subtrees():
+			if t.label() == 'FRAG':
+				return True
+		return False
 
-		
+
+	# Helper function to check for incomplete sentences
+	def _incomplete_sentence(self, tree):
+		labels = []
+		for t in tree.subtrees():
+			labels.append(t.label())
+		return labels[1] not in ['S', 'SINV', 'SQ', 'SBARQ']
+
+	# Helper functin to compute SBAR scores
+	def _sbar_incorrect(self, tree):
+		for t in tree.subtrees():
+			if t.label() == 'SBAR':
+				labels = [n.label() for n in t]
+				if labels[0] == 'S':
+					return True
+		return False
+
+	# Get conjunction scores
+	def _incorrect_conj(self, tree, grade):
+		for t in tree.subtrees():
+			if t.label() == 'SBAR':
+				children = [n for n in t]
+				c_labels = [c.label() for c in children]
+				try:
+					in_idx = [idx for idx, lab in enumerate(c_labels) if lab == 'IN']
+					s_idx = [idx for idx, lab in enumerate(c_labels) if lab == 'S']
+					if in_idx and s_idx:
+						inj = '_'.join([children[idx][0].lower() for idx in in_idx])
+						s = children[s_idx[0]]
+						s_labels = [n.label() for n in s]
+						vp = s[s_labels.index('VP')]
+						vp_labels = [n.label() for n in vp.subtrees()]
+						verb_labels = [l for l in vp_labels if re.match("VB+", l)]
+						if len(verb_labels) == 0:
+							return True
+						conj_tup_key = "{0}_{1}".format(inj, verb_labels[0])
+						prob = self.conj_vb_probs[conj_tup_key] if conj_tup_key in self.conj_vb_probs else 0.000001
+						if prob < 0.125:
+							return True
+				except ValueError:
+					pass
+		return False
+
+
+	# Helper function to score a tree between 0 and 1 based on syntactic well formedness
+	def _tree_score(self, tree, grade):
+		frag_score = int(not self._frag_present(tree))
+		sent_score = int(not self._incomplete_sentence(tree))
+		sbar_score = int(not self._sbar_incorrect(tree))
+		conj_score = int(not self._incorrect_conj(tree, grade))
+		return np.average([frag_score, sent_score, sbar_score, conj_score])
+
+
+
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def form_score(self, e):
-		return 0
+		total_score = 0
+		for tree in e.syn_parse:
+			total_score += self._tree_score(tree, e.grade)
+		score = total_score / len(e.syn_parse)
+		score = 1 + (score * 4)
+		return round(score, 2)
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def cohr_score(self, e):
@@ -206,6 +280,7 @@ class EssayGrader:
 		result['sv_agr'] = self.sv_agr_score(e)
 		result['verb'] = self.verb_score(e)
 		result['form'] = self.form_score(e)
+
 		
 		# Part d(i), d(ii)
 		result['cohr'] = self.cohr_score(e)
@@ -214,6 +289,14 @@ class EssayGrader:
 		# Aggregates
 		result['final'] = self.final_score(result)
 		result['grade'] = self.label(result['final'])
+
+
+
+		score = result['final']
+		if e.grade == 'low':
+			self.low_scores.append(score)
+		else:
+			self.high_scores.append(score)
 
 		# TODO: Remove this
 		# result['grade'] = e.grade

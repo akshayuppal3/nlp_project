@@ -5,6 +5,9 @@ import argparse
 import os
 from utils import load_index, store_results, evaluate_accuracy, write_essays_tocsv
 import pickle as pkl
+import matplotlib.pyplot as plt
+from scipy.stats import entropy
+import numpy as np
 
 
 
@@ -59,15 +62,14 @@ def train(input_dir, output_dir, model_dir):
 	train_idx_filepath = os.path.join(input_dir, TRAIN_DIR, IDX_FILE)
 
 	index = load_index(train_idx_filepath)
-	# grader = EssayGrader(model_dir)
-
 	
 	# load essays
-	# with open('essay.pkl', 'rb') as fin:
-	# 	essays = pkl.load(fin)
+	with open('essay.pkl', 'rb') as fin:
+		essays = pkl.load(fin)
 
-	essays = []
+	# essays = []
 	results = []
+	grader = EssayGrader(model_dir)
 	for idx, record in enumerate(index):
 		# print('---' * 10 )
 		filename = record['filename']
@@ -75,14 +77,14 @@ def train(input_dir, output_dir, model_dir):
 		grade = record['grade']
 
 		# Grade, augment and store
-		filepath = os.path.join(train_essays_dir, filename)
-		e = Essay(filepath, prompt, grade)
-		essays.append(e)
+		# filepath = os.path.join(train_essays_dir, filename)
+		# e = Essay(filepath, prompt, grade)
+		# essays.append(e)
 
-		# e = essays[idx]
-		# result = grader.grade(e)
-		# result['filename'] = filename
-		# results.append(result)
+		e = essays[idx]
+		result = grader.grade(e)
+		result['filename'] = filename
+		results.append(result)
 
 	probs = EssayGrader.get_sub_verb_probs(essays)
 	prob_filename = "sub_verb_probs.pkl"
@@ -97,10 +99,38 @@ def train(input_dir, output_dir, model_dir):
 		pkl.dump(probs, fout)
 
 
-	# res_filepath = os.path.join(output_dir, RES_FILE)
-	# store_results(results, res_filepath)
+	# Store results in the output folder	
+	res_filepath = os.path.join(output_dir, RES_FILE)
+	store_results(results, res_filepath)
+
+	# Keep it commented unless you need performance gains
+	# Store all essays as a pickle object
+	with open('essay.pkl', 'wb') as fout:
+		pkl.dump(essays, fout)
+
+	# Write the csv file containing essays
 	csv_filepath = os.path.join(output_dir, ESS_FILE)
 	write_essays_tocsv(essays, csv_filepath)
+
+	# @TODO Remove this code in the end
+	plt.hist(grader.high_scores, label='high', color='blue' , alpha=0.5)
+	plt.hist(grader.low_scores, label='low', color='red', alpha=0.5)
+	plt.legend()
+	plt.show()
+
+	print(entropy(grader.high_scores, qk=grader.low_scores))
+	print(np.mean(grader.high_scores))
+	print(np.mean(grader.low_scores))
+
+	# probs = grader.conj_vb_tups.copy()
+	# for key in probs:
+	# 	inj = '_'.join(key.split('_')[:-1])
+	# 	other_keys = [key for key in  grader.conj_vb_tups.keys() if key.startswith(inj)]
+	# 	total = 0
+	# 	for k in other_keys:
+	# 		total += grader.conj_vb_tups[k]
+	# 	probs[key] = probs[key] / total
+	# pkl.dump(probs, open('conj_vb_probs.pkl', 'wb'))
 
 
 
@@ -113,7 +143,8 @@ def main():
 	parser.add_argument('-e', '--evaluate', help='whether or not to perform evaluation', action='store_true')
 	args = parser.parse_args()
 
-	setup_env()
+	# @TODO Uncomment this before submitting
+	# setup_env()
 	if args.function == 'test':
 		label_eval_test(args.input_dir, args.output_dir, args.model_dir, args.evaluate)	
 	else:
