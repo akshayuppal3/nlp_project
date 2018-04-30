@@ -97,39 +97,43 @@ def gender_label(word):
 
 #@return no of male and female entities @params: text
 def named_entities(text):
+	nlp = StanfordCoreNLP('http://corenlp.run', port=80) #To be changes afterwards
 	feminine_words = ['she', 'her', 'hers']
 	masculine_words = ['he', 'him', 'his']
 	props = {'annotators': 'ner,pos'} # tokenize,ssplit,pos,lemma,
 
-	jsonresponse = json.loads(nlp.annotate(text, properties=props))
-	sentences = jsonresponse['sentences']
-	count_m = 0
-	count_f = 0
+	try: 
+		jsonresponse = json.loads(nlp.annotate(text, properties=props))
+		sentences = jsonresponse['sentences']
+		count_m = 0
+		count_f = 0
 
-	for idx,sentence in enumerate(sentences):
-		entity = sentence['entitymentions']
-		
-		for element in entity:
-			word = element['text']
-			ner = element['ner']
-			begin = element['tokenBegin']
-			#print(word,ner)
-			if( word.lower() not in feminine_words and word.lower() not in masculine_words):  #not including she or he as an entity
-				if(ner == 'PERSON'):
-					print(word)
-					if(len(word_tokenize(word)) > 1):
-						word = word_tokenize(word)[0]      #taking only the first name in case of surnames
-					label = gender_label(word)
-					if(label == 'm'):
-						count_m += 1
-					elif(label == 'f'):
-						count_f += 1
+		for idx,sentence in enumerate(sentences):
+			entity = sentence['entitymentions']
+			
+			for element in entity:
+				word = element['text']
+				ner = element['ner']
+				begin = element['tokenBegin']
+				#print(word,ner)
+				if( word.lower() not in feminine_words and word.lower() not in masculine_words):  #not including she or he as an entity
+					if(ner == 'PERSON'):
+						print(word)
+						if(len(word_tokenize(word)) > 1):
+							word = word_tokenize(word)[0]      #taking only the first name in case of surnames
+						label = gender_label(word)
+						if(label == 'm'):
+							count_m += 1
+						elif(label == 'f'):
+							count_f += 1
 
-	if (count_m > 0 or count_f > 0):			
-		d = {"m" : count_m , "f" : count_f}
-		return(d)
-	else:
-		return({'m' : 0 , 'f' :0})		
+		if (count_m > 0 or count_f > 0):			
+			d = {"m" : count_m , "f" : count_f}
+			return(d)
+		else:
+			return({'m' : 0 , 'f' :0})		
+	except ValueError:
+		return({'m' : 0 , 'f' :0})
 
 def get_words(text):
 	return (word_tokenize(text))				
@@ -179,25 +183,32 @@ def third_pers_sing(text):
 
 #@return third_person_sing score between 0-1 @params text
 def third_pers_plural(text):
-	vaild_count = 0
+	nlp = StanfordCoreNLP('http://corenlp.run', port=80) #To be changes afterwards
 	third_plural_words = ['they', 'themselves','their','them']
 	props = {'annotators': "coref"} #tokenize,ssplit,,
-	jsonresponse = json.loads(nlp.annotate(text, properties=props))
-	jsonresponse = (jsonresponse['corefs'])
-	#print(jsonresponse)
-	score = 0
-	for key,value in jsonresponse.items():  #dict
-		ident = key
-		gender = value[0]['gender']   #referring to the first element(main entity) in coref chain 
-		number = value[0]['number']
-		animacy = value[0]['animacy']
-		for element in value:  #list
-			if(element['text'] in third_plural_words):  #Check only in case we encounter third person plural(they)
-				vaild_count += 1
-				if (element['gender'] != gender or element['number'] != number or element['animacy'] != animacy):
-					# print (gender, number, number, animacy)
-					# print(element['text'],element['gender'], element['number'], element['animacy'])
-					score += 1
-	#normalize the score by no of occurence of third person plural words in the essay
-	score = score / vaild_count			
+	try:
+		jsonresponse = json.loads(nlp.annotate(text, properties=props))
+		jsonresponse = (jsonresponse['corefs'])
+		#print(jsonresponse)
+		vaild_count = 0
+		score = 0
+		for key,value in jsonresponse.items():  #dict
+			ident = key
+			gender = value[0]['gender']   #referring to the first element(main entity) in coref chain 
+			number = value[0]['number']
+			animacy = value[0]['animacy']
+			for element in value:  #list
+				if(element['text'] in third_plural_words):  #Check only in case we encounter third person plural(they)
+					vaild_count += 1
+					if (element['gender'] != gender or element['number'] != number or element['animacy'] != animacy):
+						# print (gender, number, number, animacy)
+						# print(element['text'],element['gender'], element['number'], element['animacy'])
+						score += 1
+		#normalize the score by no of occurence of third person plural words in the essay
+		if (vaild_count != 0):   #Handle div by zero error
+			score = score/ vaild_count
+		else:
+			score = score		
+	except ValueError:
+		score = 0	
 	return(score)	

@@ -8,9 +8,7 @@ import pickle as pkl
 import matplotlib.pyplot as plt
 from scipy.stats import entropy
 import numpy as np
-
-
-
+	
 # Function to label examples in input directory and store results in output directory
 def label_eval_test(input_dir, output_dir, model_dir, evaluate):
 	ESSAY_DIR = 'essays'

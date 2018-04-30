@@ -7,6 +7,7 @@ import pickle as pkl
 import os
 import math
 import numpy as np
+import utils as ut
 
 
 class EssayGrader:
@@ -239,8 +240,8 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def cohr_score(self, e):
-		sing_score = third_pers_sing(self.text)
-		plural_score = third_pers_plural(self.text)
+		sing_score = ut.third_pers_sing(e.text)
+		plural_score = ut.third_pers_plural(e.text)
 		score = (sing_score + plural_score) / 2
 		return (score * 5)
 
