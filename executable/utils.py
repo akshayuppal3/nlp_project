@@ -118,7 +118,7 @@ def named_entities(text):
 				#print(word,ner)
 				if( word.lower() not in feminine_words and word.lower() not in masculine_words):  #not including she or he as an entity
 					if(ner == 'PERSON'):
-						print(word)
+						#print(word)
 						if(len(word_tokenize(word)) > 1):
 							word = word_tokenize(word)[0]      #taking only the first name in case of surnames
 						label = gender_label(word)
