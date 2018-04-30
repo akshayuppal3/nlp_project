@@ -95,9 +95,10 @@ def gender_label(word):
 		else:
 			return('u')		
 
-# @return -male and female entities in the text 
-# @params - text or an essay
+#@return no of male and female entities @params: text
 def named_entities(text):
+	feminine_words = ['she', 'her', 'hers']
+	masculine_words = ['he', 'him', 'his']
 	props = {'annotators': 'ner,pos'} # tokenize,ssplit,pos,lemma,
 
 	jsonresponse = json.loads(nlp.annotate(text, properties=props))
@@ -113,25 +114,29 @@ def named_entities(text):
 			ner = element['ner']
 			begin = element['tokenBegin']
 			#print(word,ner)
-			if(ner == 'PERSON'):
-				if(len(word_tokenize(word)) > 1):
-					word = word_tokenize(word)[0]      #taking only the first name in case of surnames
-				print(word)
-				label = gender_label(word)
-				if(label == 'm'):
-					count_m += 1
-				elif(label == 'f'):
-					count_f += 1
+			if( word.lower() not in feminine_words and word.lower() not in masculine_words):  #not including she or he as an entity
+				if(ner == 'PERSON'):
+					print(word)
+					if(len(word_tokenize(word)) > 1):
+						word = word_tokenize(word)[0]      #taking only the first name in case of surnames
+					label = gender_label(word)
+					if(label == 'm'):
+						count_m += 1
+					elif(label == 'f'):
+						count_f += 1
 
 	if (count_m > 0 or count_f > 0):			
 		d = {"m" : count_m , "f" : count_f}
-		return(d)			
+		return(d)
+	else:
+		return({'m' : 0 , 'f' :0})		
 
-def get_words(essay):
-	return (word_tokenize(essay))				
+def get_words(text):
+	return (word_tokenize(text))				
 
 #get the count of third person singular feminine words
 def get_feminine_poss(words):
+	feminine_words = ['she', 'her', 'hers']
 	count = 0
 	for word in words:
 		if word.lower() in feminine_words:
@@ -140,27 +145,59 @@ def get_feminine_poss(words):
 
 #get the count of third person singular feminine words
 def get_masculine_poss(words):
+	masculine_words = ['he', 'him', 'his']
 	count = 0
 	for word in words:
 		if word.lower() in masculine_words:
 			count += 1
-	return(count)		 
+	return(count)		
 
-# @returns a score between 0 - 2 based on incorrect reference in antecedent
-def third_pers_sing(essay):
+# @returns a score between 0 - 1 based on incorrect reference in antecedent
+def third_pers_sing(text):
 	score = 0
-	m_f_ent = named_entities(essay)
-	print(m_f_ent)
-	m_ref = get_masculine_poss(get_words(essay))
-	f_ref = get_feminine_poss(get_words(essay))
+	m_f_ent = named_entities(text)
+	#print(m_f_ent)
+	m_ref = get_masculine_poss(get_words(text))
+	f_ref = get_feminine_poss(get_words(text))
 
 	#Check for m/f antecendant
 	#Check if there is mention of male entity then there exits one
 	if (m_ref > 0):
+		# print(m_f_ent['m'])
 		if(m_f_ent['m'] == 0):
 			score += 1
 	#Check if there is mention of male entity then there exits one
 	if (f_ref > 0):	
 		if(m_f_ent['f'] == 0):
 			score += 1
+	#Max score that can be would be 2 when there is no mention of either male or female entity but 
+	#there is occurence of masculine and feminine words
+	#Normailze
+	if (score == 2):
+		score = 1
 	return (score)
+
+#@return third_person_sing score between 0-1 @params text
+def third_pers_plural(text):
+	vaild_count = 0
+	third_plural_words = ['they', 'themselves','their','them']
+	props = {'annotators': "coref"} #tokenize,ssplit,,
+	jsonresponse = json.loads(nlp.annotate(text, properties=props))
+	jsonresponse = (jsonresponse['corefs'])
+	#print(jsonresponse)
+	score = 0
+	for key,value in jsonresponse.items():  #dict
+		ident = key
+		gender = value[0]['gender']   #referring to the first element(main entity) in coref chain 
+		number = value[0]['number']
+		animacy = value[0]['animacy']
+		for element in value:  #list
+			if(element['text'] in third_plural_words):  #Check only in case we encounter third person plural(they)
+				vaild_count += 1
+				if (element['gender'] != gender or element['number'] != number or element['animacy'] != animacy):
+					# print (gender, number, number, animacy)
+					# print(element['text'],element['gender'], element['number'], element['animacy'])
+					score += 1
+	#normalize the score by no of occurence of third person plural words in the essay
+	score = score / vaild_count			
+	return(score)	

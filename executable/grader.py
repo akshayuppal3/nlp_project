@@ -239,7 +239,10 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def cohr_score(self, e):
-		return 0
+		sing_score = third_pers_sing(self.text)
+		plural_score = third_pers_plural(self.text)
+		score = (sing_score + plural_score) / 2
+		return (score * 5)
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def topic_score(self, e):
