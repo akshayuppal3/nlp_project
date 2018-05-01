@@ -29,6 +29,9 @@ class EssayGrader:
 		with open(os.path.join(models_dir, 'classifier.pkl'), 'rb') as fin:
 			self.classifier = pkl.load(fin)
 
+		with open(os.path.join(models_dir, 'scaler.pkl'), 'rb') as fin:
+			self.scaler = pkl.load(fin)
+
 		self.lemmatizer = WordNetLemmatizer()
 		self.semcor_ic = wordnet_ic.ic('ic-semcor.dat')
 		self.stopwords = stopwords.words('english')
@@ -361,6 +364,7 @@ class EssayGrader:
 	# A classifier based final score assignment
 	def final_score_class(self, r):
 		vec = np.array([r['length'], r['spell'], r['sv_agr'], r['verb'], r['form'], r['cohr'], r['topic']]).reshape(1, -1)
+		vec = self.scaler.transform(vec)
 		high_prob = self.classifier.predict_proba(vec)[0][1]
 		return round(high_prob * 55, 2)
 

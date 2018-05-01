@@ -8,6 +8,7 @@ import pickle as pkl
 import numpy as np
 from tqdm import tqdm
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 
 
 
@@ -128,6 +129,9 @@ def train(input_dir, output_dir, model_dir):
 	feat = np.array(feat)
 	lab = np.array(lab)
 
+	scaler = StandardScaler()
+	feat = scaler.fit_transform(feat)
+
 	# Training the Logistic regression classifier
 	clf = LogisticRegression()
 	clf.fit(feat, lab)
@@ -135,6 +139,11 @@ def train(input_dir, output_dir, model_dir):
 	classifier_path = os.path.join(model_dir, class_filename)
 	with open(classifier_path, 'wb') as fout:
 		pkl.dump(clf, fout)
+
+	scaler_filename = 'scaler.pkl'
+	scaler_filepath = os.path.join(model_dir, scaler_filename)
+	with open(scaler_filepath, 'wb') as fout:
+		pkl.dump(scaler, fout)
 
 
 	# Write the csv file containing essays

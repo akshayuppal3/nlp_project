@@ -69,4 +69,22 @@ In this part we compute Li distance in WordNet heirarchy between set of words fo
 NOTE: For all of these scores, we can see the difference between low and high classes on average as reported in ROOT/output/results.txt included in the folder. With more data our probabilistic approach for part C(i) and C(ii) is expected to improve.
 
 
+Final Score & Grade
+====================
+A logistic regression classifier is trained on the dataset and probability of high class is multiplied with MAX_SCORE which is 55 to get final score. If the probability is above 0.5 then the 'high' label is assiged, 'low' otherwise
+
+Weights
+=======
+The corresponding coefficients of logistic regression classifier are listed below:
+Length				2.6269878
+Spelling			-1.7054796
+SV agreement 		0.2984408
+Verb Score   		0.28998445
+Well-formedness		0.44888262,
+Coherence	        0.
+Topic				0.23091447
+
+
+As expected, spelling has a negative weight due to negative scoring (it is a penalty). Coherece has a 0 weight because it is constant and not implemented. Length is our most important feature.
+
 
