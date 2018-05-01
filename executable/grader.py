@@ -136,7 +136,7 @@ class EssayGrader:
 					if not is_english_word(w):
 						mistakes += 1
 					valid_words += 1
-		score = mistakes / float(valid_words)
+		score = (mistakes / float(valid_words)) if valid_words > 0 else 0
 		score *= 4.0
 		return round(score, 2)
 
@@ -157,7 +157,7 @@ class EssayGrader:
 			prob = self.sub_verb_probs[key] if key in self.sub_verb_probs else 0.000001
 			if prob > 0.08:
 				score += 1
-		score = score / len(tups)
+		score = (score / len(tups)) if len(tups) > 0 else 1
 		score = 1 + (score * 4)
 		return round(score, 2)
 
@@ -177,7 +177,7 @@ class EssayGrader:
 					score += 1
 				num_bigrams += 1
 
-		score = score / num_bigrams
+		score = (score / num_bigrams) if num_bigrams > 0 else 1
 		score = 1 + (score * 4)
 		return round(score, 2)
 	
@@ -247,7 +247,7 @@ class EssayGrader:
 		total_score = 0
 		for tree in e.syn_parse:
 			total_score += self._tree_score(tree, e.grade)
-		score = total_score / len(e.syn_parse)
+		score = (total_score / len(e.syn_parse)) if len(e.syn_parse) > 0 else 1
 		score = 1 + (score * 4)
 		return round(score, 2)
 

@@ -19,8 +19,11 @@ Name 2: auppal8@uic.edu
    
    Alternatively, you may type in the following sequence of commands:
    
-    pip3 install nltk
-    pip3 install stanfordcorenlp
+	pip3 install numpy
+	pip3 install nltk
+	pip3 install stanfordcorenlp
+	pip3 install tqdm
+	pip3 install sklearn
     python3 driver.py -f test
 
 
@@ -33,7 +36,7 @@ Part A was relatively simpler as we only had to extract the number of sentences 
 
 PART B
 ======
-In Part B, we have used wordnet corpora to figure out whether the word is an english word or not and we ensure that tokens which are not english words or a part of wordnet corpora e.g. punctuations and stopwords are not considered in the overall score computation. We normalize the number of errors by valid words and scale it between 0 and 4, where 0 means no errors and 4 means every word is a spelling error.
+In Part B, we have used wordnet corpora to figure out whether the word is an english word or not and we ensure that tokens which are not english words or a part of wordnet corpora e.g. punctuations and stopwords are not considered in the overall score computation and proper nounds are also ignored. We normalize the number of errors by valid words and scale it between 0 and 4, where 0 means no errors and 4 means every word is a spelling error.
 
 
 PART C(i)
@@ -48,5 +51,22 @@ PART C(ii)
 In this part we first identify all the verbs in the essay and then we extract the context surrounding the verb. This gives us a list of intervals, we merge these intervals to get longer non-overlapping segments of (token, pos_tag) tuples. We compute the probabilities of bigrams for high quality essays and we train a set of words in the same way as we treat prepositions in Part C(i). This set of word contains words like (has, am, I, are etc). This ensures that cases like "I am going" have high probability than "I are go". We normalize the score and scale it between 1 to 5.
 
 
+PART C(iii)
+==========
+In this part we compute fragment penalty, incomplete sentence penalty, incorrect sbar penalty and incorrect conjugation penalty and report the average of these penalties (inverted, which means the score is higher if essay is not penalized). fragment penalty simply checks if FRAG tags are present. Incompelte sentence penalty checks if there is S, SQ or other possible correct intermediate tags present at the root of the syntactic tree. incorrect sbar penalty checks whether the subtree of SBAR is a proper sentence or not. Incorrect conjugation penalty is based on probabilistic bigram scoring, for every conjugation and corresponding word we compute a probability and penalize based on the probability.
+
+
+PART D(i)
+==========
+For competition, we have not implemented this module and we will implement it for the final submission, all scores are constant
+
+
+PART D(ii)
+==========
+In this part we compute Li distance in WordNet heirarchy between set of words found in topic prompt and set of words from the essay. We compare nouns with nouns and verbs with verbs. Adjectives and adverbs are not considered as they were not very discriminatory.
+
+
 NOTE: For all of these scores, we can see the difference between low and high classes on average as reported in ROOT/output/results.txt included in the folder. With more data our probabilistic approach for part C(i) and C(ii) is expected to improve.
+
+
 
