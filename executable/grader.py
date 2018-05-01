@@ -240,14 +240,12 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def cohr_score(self, e):
-		#print(e.text)
-		#sing_score = ut.third_pers_sing(e.text)
 		sing_score, plural_score = ut.third_pers_plural(e.text)
-		print(sing_score, plural_score , e.grade)
 		score = (sing_score + plural_score) / 2
 		score = 1 + (score * 4)
 		#Changing to positive scale
 		score = 5 - score
+		print(score, e.grade)
 		return round(score, 2)
 
 	# A value between 1-5, 1 being the lowest and 5 the highest

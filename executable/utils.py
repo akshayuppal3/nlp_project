@@ -171,7 +171,6 @@ def get_feminine_poss(words):
 	count = 0
 	for word in words:
 		if word.lower() in feminine_words:
-			print("Feminine",word)
 			count += 1
 	return (count)
 
@@ -181,7 +180,6 @@ def get_masculine_poss(words):
 	count = 0
 	for word in words:
 		if word.lower() in masculine_words:
-			print("Masculine",word)
 			count += 1
 	return(count)		
 
@@ -209,11 +207,10 @@ def third_pers_sing(text):
 	if (f_ref > 0):	
 		if(m_f_ent['f'] == 0):
 			score += 1
-	#Max score that can be would be 2 when there is no mention of either male or female entity but 
-	#there is occurence of masculine and feminine words
 	#Normailze
-	if (score == 2):
-		score = 1
+	if (score > 0):
+		if((m_ref + f_ref) > 0):
+			score = score / (m_ref + f_ref)
 	return (score)
 
 #@return third_person_sing score between 0-1 @params text
