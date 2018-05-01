@@ -10,12 +10,15 @@ from scipy.stats import entropy
 import numpy as np
 import math
 
+
+
 def bhattacharyya(a, b):
     """ Bhattacharyya distance between distributions (lists of floats). """
     if not len(a) == len(b):
         raise ValueError("a and b must be of the same size")
 
     return -math.log(sum((math.sqrt(u * w) for u, w in zip(a, b))))
+
 
 # Function to label examples in input directory and store results in output directory
 def label_eval_test(input_dir, output_dir, model_dir, evaluate):

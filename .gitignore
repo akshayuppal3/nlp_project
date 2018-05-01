@@ -5,3 +5,4 @@
 executable/__pycache__/
 
 executable/resources/stanford-corenlp-full-2018-02-27/
+output/results.csv

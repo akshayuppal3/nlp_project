@@ -7,9 +7,13 @@ import pickle as pkl
 import os
 import math
 import numpy as np
+<<<<<<< HEAD
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus.reader.wordnet import WordNetError
 import rdflib
+=======
+import utils as ut
+>>>>>>> e57b5d427e2c46aab02b9288b5d76b631eac0ab9
 
 
 class EssayGrader:
@@ -252,7 +256,14 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def cohr_score(self, e):
-		return 0
+		# sing_score, plural_score = ut.third_pers_plural(e.text)
+		# score = (sing_score + plural_score) / 2
+		# score = 1 + (score * 4)
+		# #Changing to positive scale
+		# score = 5 - score
+		# print(score, e.grade)
+		score = 5
+		return round(score, 2)
 
 
 	def _get_pos(self, words, pos_tags, regex):
@@ -381,7 +392,11 @@ class EssayGrader:
 
 
 
+<<<<<<< HEAD
 		score = result['topic']
+=======
+		score = result['cohr']
+>>>>>>> e57b5d427e2c46aab02b9288b5d76b631eac0ab9
 		if e.grade == 'low':
 			self.low_scores.append(score)
 		else:
