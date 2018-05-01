@@ -21,11 +21,11 @@ class Essay():
 		return all_sent
 
 
-	def _get_sentences(self):
+	def _get_sentences(self, text):
 		en_stopwords = stopwords.words('english')
 		en_stopwords.append('etc')
 
-		tok_sentences = sent_tokenize(self.text)
+		tok_sentences = sent_tokenize(text)
 		sentences = []
 		for tsen in tok_sentences:
 			sentences += list(filter(len, [s.strip() for s in tsen.split('\n')]))
@@ -52,16 +52,16 @@ class Essay():
 		return new_sentences
 
 
-	def _get_words(self):
+	def _get_words(self, sentences):
 		words = []
-		for s in self.sentences:
+		for s in sentences:
 			words.append(self.snlp.word_tokenize(s))
 		return words
 
 
-	def _get_pos(self):
+	def _get_pos(self, sentences):
 		pos_tags = []
-		for s_idx, s in enumerate(self.sentences):
+		for s_idx, s in enumerate(sentences):
 			pos = [t[1] for t in self.snlp.pos_tag(s)]
 			pos_tags.append(pos)
 		return pos_tags
@@ -155,10 +155,14 @@ class Essay():
 		self.prompt = prompt
 		self.grade = grade
 		self.text = utils.read_txt_file(self.filepath).strip()
-		self.sentences = self._get_sentences()
-		self.words = self._get_words()
-		self.pos_tags = self._get_pos()
+		self.sentences = self._get_sentences(self.text)
+		self.words = self._get_words(self.sentences)
+		self.pos_tags = self._get_pos(self.sentences)
 		self.syn_parse = self._get_synparse()
 		self.dep_parse = self._get_depparse()
+		self.pt_sentences = self._get_sentences(self.prompt.strip())
+		self.pt_words = self._get_words(self.pt_sentences)
+		self.pt_pos_tags = self._get_pos(self.pt_sentences)
+
 
 

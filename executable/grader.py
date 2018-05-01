@@ -2,11 +2,14 @@ import nltk
 from essay import Essay
 import re
 from utils import is_english_word
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet, wordnet_ic
 import pickle as pkl
 import os
 import math
 import numpy as np
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus.reader.wordnet import WordNetError
+import rdflib
 
 
 class EssayGrader:
@@ -22,9 +25,18 @@ class EssayGrader:
 		with open(os.path.join(models_dir, 'conj_vb_probs.pkl'), 'rb') as fin:
 			self.conj_vb_probs = pkl.load(fin)
 
+		self.lemmatizer = WordNetLemmatizer()
+		self.semcor_ic = wordnet_ic.ic('ic-semcor.dat')
+		self.stopwords = stopwords.words('english')
+
+		# with open('resources/sumo_graph.pkl', 'rb') as fin:
+		# 	self.sumo_graph = pkl.load(fin)
+
 		# @TODO Remove these in the end
 		self.high_scores = []
 		self.low_scores = []
+
+		self.sub_verb_counts = dict()
 
 
 
@@ -114,16 +126,17 @@ class EssayGrader:
 		valid_words = 0
 		mistakes = 0
 
-		en_stopwords = stopwords.words('english')
+		en_stopwords = self.stopwords
+		en_stopwords += ['could', 'would', 'since', 'without']
 
-		for w_list in e.words:
+		for idx, w_list in enumerate(e.words):
 			for w in w_list:
-				if re.match("^[A-Za-z]+$", w) and not w.lower() in en_stopwords:
+				if re.match("^[A-Za-z]+$", w) and not w.lower() in en_stopwords and e.pos_tags[idx] != 'NNP':
 					if not is_english_word(w):
 						mistakes += 1
 					valid_words += 1
-		score = mistakes / valid_words
-		score *= 4
+		score = mistakes / float(valid_words)
+		score *= 4.0
 		return round(score, 2)
 
 
@@ -141,7 +154,7 @@ class EssayGrader:
 				smod_tag = "{0}/{1}".format(sub.lower(), stag)
 			key = "{0}_{1}".format(smod_tag, vtag)
 			prob = self.sub_verb_probs[key] if key in self.sub_verb_probs else 0.000001
-			if prob > 0.1:
+			if prob > 0.08:
 				score += 1
 		score = score / len(tups)
 		score = 1 + (score * 4)
@@ -241,9 +254,85 @@ class EssayGrader:
 	def cohr_score(self, e):
 		return 0
 
+
+	def _get_pos(self, words, pos_tags, regex):
+		return [w for idx, w in enumerate(words) if re.match(regex, pos_tags[idx])]
+
+
+	def _get_wn_sim(self, plist, elist, pos):
+		all_sim = [0.1]
+		for p in plist:
+			p_sim = [0]
+			for e in elist:
+				if not p in self.stopwords and not e in self.stopwords:
+					try:
+						w1 = wordnet.synsets(p, pos=pos)[0]
+						w2 = wordnet.synsets(e, pos=pos)[0]
+						p_sim.append(w1.lin_similarity(w2, self.semcor_ic))
+					except WordNetError:
+						pass
+					except IndexError:
+						pass
+
+			all_sim.append(np.max(p_sim))
+
+		all_sim = np.array(all_sim)
+		return np.average(all_sim[all_sim > 0])
+
+
+
+
+	def _get_wordnet_score(self, e):
+		all_es_words = [w for sent in e.words for w in sent]
+		all_es_pos = [t for sent in e.pos_tags for t in sent]
+		all_pt_words = [w for sent in e.pt_words for w in sent]
+		all_pt_pos = [t for sent in e.pt_pos_tags for t in sent]
+
+		sims = []
+		es_nn = self._get_pos(all_es_words, all_es_pos, 'NNS+')
+		pt_nn = self._get_pos(all_pt_words, all_pt_pos, 'NNS+')
+
+		if len(es_nn) > 0 and len(pt_nn) > 0:
+			noun_sim = self._get_wn_sim(pt_nn, es_nn, wordnet.NOUN)
+			sims.append(noun_sim)
+
+		es_vb = self._get_pos(all_es_words, all_es_pos, 'VB+')
+		pt_vb = self._get_pos(all_pt_words, all_pt_pos, 'VB+')
+		if len(es_vb) > 0 and len(pt_vb) > 0:
+			verb_sim = self._get_wn_sim(pt_vb, es_vb, wordnet.VERB)
+			sims.append(verb_sim)
+
+		return np.average(sims, weights=[0.7, 0.3])
+
+	# def _get_sumo_entities(self, nlist):	
+	# 	ent_urls = [e for e, _, _ in self.sumo_graph]
+	# 	ent_urls = set(ent_urls)
+	# 	for e in ent_urls:
+	# 		print()
+
+
+
+
+	# def _get_sumo_score(self, e):
+	# 	all_es_words = [w for sent in e.words for w in sent]
+	# 	all_es_pos = [t for sent in e.pos_tags for t in sent]
+	# 	all_pt_words = [w for sent in e.pt_words for w in sent]
+	# 	all_pt_pos = [t for sent in e.pt_pos_tags for t in sent]
+
+	# 	es_nn = self._get_pos(all_es_words, all_es_pos, 'NN.*')
+	# 	pt_nn = self._get_pos(all_pt_words, all_pt_pos, 'NN.*')
+
+	# 	es_ents = self._get_sumo_entities(es_nn)
+	# 	pt_ents = self._get_sumo_entities(pt_nn)
+	# 	return score
+
+
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def topic_score(self, e):
-		return 0
+		score = self._get_wordnet_score(e)
+		# score = self._get_sumo_score(e)
+		score = 1 + (score * 4)
+		return round(score, 2)
 
 	# A linear combination of all scores
 	def final_score(self, result):
@@ -292,14 +381,14 @@ class EssayGrader:
 
 
 
-		score = result['final']
+		score = result['topic']
 		if e.grade == 'low':
 			self.low_scores.append(score)
 		else:
 			self.high_scores.append(score)
 
 		# TODO: Remove this
-		# result['grade'] = e.grade
+		result['grade'] = e.grade
 
 		return result
 

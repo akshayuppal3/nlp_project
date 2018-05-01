@@ -8,8 +8,14 @@ import pickle as pkl
 import matplotlib.pyplot as plt
 from scipy.stats import entropy
 import numpy as np
+import math
 
+def bhattacharyya(a, b):
+    """ Bhattacharyya distance between distributions (lists of floats). """
+    if not len(a) == len(b):
+        raise ValueError("a and b must be of the same size")
 
+    return -math.log(sum((math.sqrt(u * w) for u, w in zip(a, b))))
 
 # Function to label examples in input directory and store results in output directory
 def label_eval_test(input_dir, output_dir, model_dir, evaluate):
@@ -64,8 +70,8 @@ def train(input_dir, output_dir, model_dir):
 	index = load_index(train_idx_filepath)
 	
 	# load essays
-	with open('essay.pkl', 'rb') as fin:
-		essays = pkl.load(fin)
+	# with open('essay.pkl', 'rb') as fin:
+	# 	essays = pkl.load(fin)
 
 	# essays = []
 	results = []
@@ -105,12 +111,22 @@ def train(input_dir, output_dir, model_dir):
 
 	# Keep it commented unless you need performance gains
 	# Store all essays as a pickle object
-	with open('essay.pkl', 'wb') as fout:
-		pkl.dump(essays, fout)
+	# with open('essay.pkl', 'wb') as fout:
+	# 	pkl.dump(essays, fout)
 
 	# Write the csv file containing essays
 	csv_filepath = os.path.join(output_dir, ESS_FILE)
 	write_essays_tocsv(essays, csv_filepath)
+
+
+	print(np.mean(grader.high_scores))
+	print(np.mean(grader.low_scores))
+
+	hist_a, _ = np.histogram(grader.high_scores)
+	hist_b, _ = np.histogram(grader.low_scores)
+	hist_a = hist_a / np.sum(hist_a)
+	hist_b = hist_b / np.sum(hist_b)
+	print(bhattacharyya(hist_a.tolist(), hist_b.tolist()))
 
 	# @TODO Remove this code in the end
 	plt.hist(grader.high_scores, label='high', color='blue' , alpha=0.5)
@@ -118,9 +134,7 @@ def train(input_dir, output_dir, model_dir):
 	plt.legend()
 	plt.show()
 
-	print(entropy(grader.high_scores, qk=grader.low_scores))
-	print(np.mean(grader.high_scores))
-	print(np.mean(grader.low_scores))
+
 
 	# probs = grader.conj_vb_tups.copy()
 	# for key in probs:
