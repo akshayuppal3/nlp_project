@@ -144,6 +144,8 @@ class Essay():
 		data['dep'] = '\n\n'.join([str(d) for d in self.dep_parse])
 		return data
 
+
+
 	@staticmethod
 	def get_fields():
 		return ['filepath', 'prompt', 'grade', 'text', 'sentences', 'words', 'syn', 'pos', 'dep']

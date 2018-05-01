@@ -9,7 +9,7 @@ import math
 import numpy as np
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus.reader.wordnet import WordNetError
-import rdflib
+
 
 
 
@@ -26,6 +26,9 @@ class EssayGrader:
 		with open(os.path.join(models_dir, 'conj_vb_probs.pkl'), 'rb') as fin:
 			self.conj_vb_probs = pkl.load(fin)
 
+		with open(os.path.join(models_dir, 'classifier.pkl'), 'rb') as fin:
+			self.classifier = pkl.load(fin)
+
 		self.lemmatizer = WordNetLemmatizer()
 		self.semcor_ic = wordnet_ic.ic('ic-semcor.dat')
 		self.stopwords = stopwords.words('english')
@@ -34,11 +37,8 @@ class EssayGrader:
 		# 	self.sumo_graph = pkl.load(fin)
 
 		# @TODO Remove these in the end
-		self.high_scores = []
-		self.low_scores = []
-
-		self.sub_verb_counts = dict()
-
+		# self.high_scores = []
+		# self.low_scores = []
 
 
 	# A function to compute probabilities for subject verb agreement pairs
@@ -289,7 +289,6 @@ class EssayGrader:
 
 
 
-
 	def _get_wordnet_score(self, e):
 		all_es_words = [w for sent in e.words for w in sent]
 		all_es_pos = [t for sent in e.pos_tags for t in sent]
@@ -359,9 +358,16 @@ class EssayGrader:
 			score += result[key] * weights[key]
 		return round(score, 2)
 
+	# A classifier based final score assignment
+	def final_score_class(self, r):
+		vec = np.array([r['length'], r['spell'], r['sv_agr'], r['verb'], r['form'], r['cohr'], r['topic']]).reshape(1, -1)
+		high_prob = self.classifier.predict_proba(vec)[0][1]
+		return round(high_prob * 55, 2)
+
+
 	# Either 'low' or 'high' based on the final score
 	def label(self, score):
-		return 'unknown'
+		return 'high' if (score / 55) > 0.5 else 'low'
 
 
 	def grade(self, e):
@@ -384,17 +390,15 @@ class EssayGrader:
 		result['topic'] = self.topic_score(e)
 
 		# Aggregates
-		result['final'] = self.final_score(result)
+		# result['final'] = self.final_score(result)
+		result['final'] = self.final_score_class(result)
 		result['grade'] = self.label(result['final'])
 
-		score = result['final']
-		if e.grade == 'low':
-			self.low_scores.append(score)
-		else:
-			self.high_scores.append(score)
-
-		# TODO: Remove this
-		result['grade'] = e.grade
+		# score = result['final']
+		# if e.grade == 'low':
+		# 	self.low_scores.append(score)
+		# else:
+		# 	self.high_scores.append(score)
 
 		return result
 
