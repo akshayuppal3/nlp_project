@@ -73,8 +73,8 @@ def train(input_dir, output_dir, model_dir):
 	index = load_index(train_idx_filepath)
 	
 	# load essays
-	# with open('essay.pkl', 'rb') as fin:
-	# 	essays = pkl.load(fin)
+	with open('essay.pkl', 'rb') as fin:
+		essays = pkl.load(fin)
 
 	# essays = []
 	results = []

@@ -7,13 +7,10 @@ import pickle as pkl
 import os
 import math
 import numpy as np
-<<<<<<< HEAD
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus.reader.wordnet import WordNetError
 import rdflib
-=======
-import utils as ut
->>>>>>> e57b5d427e2c46aab02b9288b5d76b631eac0ab9
+
 
 
 class EssayGrader:
@@ -390,13 +387,7 @@ class EssayGrader:
 		result['final'] = self.final_score(result)
 		result['grade'] = self.label(result['final'])
 
-
-
-<<<<<<< HEAD
-		score = result['topic']
-=======
-		score = result['cohr']
->>>>>>> e57b5d427e2c46aab02b9288b5d76b631eac0ab9
+		score = result['final']
 		if e.grade == 'low':
 			self.low_scores.append(score)
 		else:
