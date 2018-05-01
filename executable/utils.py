@@ -5,6 +5,7 @@ import json
 from stanfordcorenlp import StanfordCoreNLP
 from nltk.classify import apply_features
 from nltk.tokenize import word_tokenize
+from nltk import pos_tag
 import nltk
 import random
 
@@ -123,8 +124,10 @@ def named_entities(text):
 							word = word_tokenize(word)[0]      #taking only the first name in case of surnames
 						label = gender_label(word)
 						if(label == 'm'):
+							print("male: ",word)
 							count_m += 1
 						elif(label == 'f'):
+							print("female: ", word)
 							count_f += 1
 
 		if (count_m > 0 or count_f > 0):			
@@ -135,6 +138,30 @@ def named_entities(text):
 	except ValueError:
 		return({'m' : 0 , 'f' :0})
 
+#getting the named entities as an alternative to result returned by Json
+def named_entity_pos(text):
+	count_m = 0
+	count_f = 0
+	words = get_words(text)
+	tagged_words = pos_tag(words)
+	for token in tagged_words:
+		tag = token[1]
+		word = token[0]
+		if(tag == 'NNP'):
+			if(is_english_word(word)):
+				label = gender_label(word)
+				if(label == 'm'):
+					print("male: ",word)
+					count_m += 1
+				elif(label == 'f'):
+					print("female: ", word)
+					count_f += 1
+	if (count_m > 0 or count_f > 0):			
+		d = {"m" : count_m , "f" : count_f}
+	else:
+		d = {'m' : 0 , 'f' :0}
+	return(d)
+
 def get_words(text):
 	return (word_tokenize(text))				
 
@@ -144,6 +171,7 @@ def get_feminine_poss(words):
 	count = 0
 	for word in words:
 		if word.lower() in feminine_words:
+			print("Feminine",word)
 			count += 1
 	return (count)
 
@@ -153,14 +181,21 @@ def get_masculine_poss(words):
 	count = 0
 	for word in words:
 		if word.lower() in masculine_words:
+			print("Masculine",word)
 			count += 1
 	return(count)		
 
 # @returns a score between 0 - 1 based on incorrect reference in antecedent
 def third_pers_sing(text):
 	score = 0
-	m_f_ent = named_entities(text)
-	#print(m_f_ent)
+	m_f_ent = named_entities(text)     #count of male and female entities
+	#@Alternate approach of pos tag not seem to work
+	#m_f_ent_pos = named_entity_pos(text)
+	# if (m_f_ent['m'] == 0 and m_f_ent['f'] == 0):	#taking the pos tag as an alternative
+	# 	if(m_f_ent_pos['m'] > 0 or m_f_ent_pos['f'] > 0):
+	# 		m_f_ent['m'] = m_f_ent_pos['m']
+	# 		m_f_ent['f'] = m_f_ent_pos['f']
+ 	#print(m_f_ent)
 	m_ref = get_masculine_poss(get_words(text))
 	f_ref = get_feminine_poss(get_words(text))
 
@@ -185,30 +220,55 @@ def third_pers_sing(text):
 def third_pers_plural(text):
 	nlp = StanfordCoreNLP('http://corenlp.run', port=80) #To be changes afterwards
 	third_plural_words = ['they', 'themselves','their','them']
+	masculine_words = ['he', 'him', 'his']
+	feminine_words = ['she', 'her', 'hers']
+	third_person_score = third_pers_sing(text)
+	third_person_normalize = 0
 	props = {'annotators': "coref"} #tokenize,ssplit,,
-	try:
+	try:							#handling exception by Json
 		jsonresponse = json.loads(nlp.annotate(text, properties=props))
 		jsonresponse = (jsonresponse['corefs'])
 		#print(jsonresponse)
 		vaild_count = 0
 		score = 0
+		score_th_sing = 0
 		for key,value in jsonresponse.items():  #dict
 			ident = key
 			gender = value[0]['gender']   #referring to the first element(main entity) in coref chain 
 			number = value[0]['number']
 			animacy = value[0]['animacy']
+			text = value[0]['text']
 			for element in value:  #list
-				if(element['text'] in third_plural_words):  #Check only in case we encounter third person plural(they)
+				if(element['text'] in third_plural_words): 
+				# or element['text'] in masculine_words
+				# or element['text'] in feminine_words):  #Check only in case we encounter third person plural(they)
 					vaild_count += 1
-					if (element['gender'] != gender or element['number'] != number or element['animacy'] != animacy):
+					#if(element['gender'] != 'UNKNOWN'): #Not checking with unknown gender
+					if (element['gender'] != gender or element['number'] != number):
 						# print (gender, number, number, animacy)
 						# print(element['text'],element['gender'], element['number'], element['animacy'])
 						score += 1
+				#checking the reference of third person singular
+				if (element ['text'] in masculine_words or element['text'] in feminine_words):
+					third_person_normalize += 1
+					if (element['gender'] != gender or element['number'] != number):
+						score_th_sing += 1
+						print(text)
+						print(text,gender, number, animacy)
+						print(element['text'],element['gender'], element['number'], element['animacy'])
+		#Update the third person singular scores if update found by coref
+		if(third_person_score == 0):
+			if(score_th_sing > 0):
+				if (third_person_normalize >0):  #check for div by zero
+					third_person_score = score_th_sing/ third_person_normalize
+			else:  #Keep it zero if nothing caught by coref
+				third_person_score = 0
+
 		#normalize the score by no of occurence of third person plural words in the essay
 		if (vaild_count != 0):   #Handle div by zero error
 			score = score/ vaild_count
 		else:
 			score = score		
 	except ValueError:
-		score = 0	
-	return(score)	
+		score = 0		
+	return(third_person_score, score)	

@@ -240,10 +240,15 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def cohr_score(self, e):
-		sing_score = ut.third_pers_sing(e.text)
-		plural_score = ut.third_pers_plural(e.text)
+		#print(e.text)
+		#sing_score = ut.third_pers_sing(e.text)
+		sing_score, plural_score = ut.third_pers_plural(e.text)
+		print(sing_score, plural_score , e.grade)
 		score = (sing_score + plural_score) / 2
-		return (score * 5)
+		score = 1 + (score * 4)
+		#Changing to positive scale
+		score = 5 - score
+		return round(score, 2)
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def topic_score(self, e):
@@ -296,14 +301,14 @@ class EssayGrader:
 
 
 
-		score = result['final']
+		score = result['cohr']
 		if e.grade == 'low':
 			self.low_scores.append(score)
 		else:
 			self.high_scores.append(score)
 
 		# TODO: Remove this
-		# result['grade'] = e.grade
+		result['grade'] = e.grade
 
 		return result
 
