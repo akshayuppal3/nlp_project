@@ -132,18 +132,14 @@ def named_entities(text):
 				word = element['text']
 				ner = element['ner']
 				begin = element['tokenBegin']
-				#print(word,ner)
 				if( word.lower() not in feminine_words and word.lower() not in masculine_words):  #not including she or he as an entity
 					if(ner == 'PERSON'):
-						#print(word)
 						if(len(word_tokenize(word)) > 1):
 							word = word_tokenize(word)[0]      #taking only the first name in case of surnames
 						label = gender_label(word)
 						if(label == 'm'):
-							print("male: ",word)
 							count_m += 1
 						elif(label == 'f'):
-							print("female: ", word)
 							count_f += 1
 
 		if (count_m > 0 or count_f > 0):			
@@ -167,10 +163,8 @@ def named_entity_pos(text):
 			if(is_english_word(word)):
 				label = gender_label(word)
 				if(label == 'm'):
-					print("male: ",word)
 					count_m += 1
 				elif(label == 'f'):
-					print("female: ", word)
 					count_f += 1
 	if (count_m > 0 or count_f > 0):			
 		d = {"m" : count_m , "f" : count_f}
@@ -203,20 +197,12 @@ def get_masculine_poss(words):
 def third_pers_sing(text):
 	score = 0
 	m_f_ent = named_entities(text)     #count of male and female entities
-	#@Alternate approach of pos tag not seem to work
-	#m_f_ent_pos = named_entity_pos(text)
-	# if (m_f_ent['m'] == 0 and m_f_ent['f'] == 0):	#taking the pos tag as an alternative
-	# 	if(m_f_ent_pos['m'] > 0 or m_f_ent_pos['f'] > 0):
-	# 		m_f_ent['m'] = m_f_ent_pos['m']
-	# 		m_f_ent['f'] = m_f_ent_pos['f']
- 	#print(m_f_ent)
 	m_ref = get_masculine_poss(get_words(text))
 	f_ref = get_feminine_poss(get_words(text))
 
 	#Check for m/f antecendant
 	#Check if there is mention of male entity then there exits one
 	if (m_ref > 0):
-		# print(m_f_ent['m'])
 		if(m_f_ent['m'] == 0):
 			score += 1
 	#Check if there is mention of male entity then there exits one
@@ -258,17 +244,12 @@ def third_pers_plural(text):
 					vaild_count += 1
 					#if(element['gender'] != 'UNKNOWN'): #Not checking with unknown gender
 					if (element['gender'] != gender or element['number'] != number):
-						# print (gender, number, number, animacy)
-						# print(element['text'],element['gender'], element['number'], element['animacy'])
 						score += 1
 				#checking the reference of third person singular
 				if (element ['text'] in masculine_words or element['text'] in feminine_words):
 					third_person_normalize += 1
 					if (element['gender'] != gender or element['number'] != number):
 						score_th_sing += 1
-						print(text)
-						print(text,gender, number, animacy)
-						print(element['text'],element['gender'], element['number'], element['animacy'])
 		#Update the third person singular scores if update found by coref
 		if(third_person_score == 0):
 			if(score_th_sing > 0):
