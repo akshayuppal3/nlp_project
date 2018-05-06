@@ -96,6 +96,22 @@ def gender_label(word):
 		else:
 			return('u')		
 
+def check_gender(word):
+	female = ['female','feminine','woman','lady','girl','daughter','miss','maid',]
+	male = ['male','masculine','man','manlike','lad','son','master']
+	temp = wordnet.synsets(word)[0]
+	word_hyper = list(temp.closure(lambda s:s.hypernyms(),depth = 10))
+	for item in word_hyper:					#Checking occurence of male/female in definitions of its hypernyms
+		temp = item.definition()
+		temp_w = word_tokenize(temp)
+		for element in temp_w:
+			if (element.lower() in female):
+				return('female')
+			if (element.lower() in male):
+				return('male')
+	return('u')	
+
+
 #@return no of male and female entities @params: text
 def named_entities(text):
 	nlp = StanfordCoreNLP('http://corenlp.run', port=80) #To be changes afterwards
@@ -269,3 +285,144 @@ def third_pers_plural(text):
 	except ValueError:
 		score = 0		
 	return(third_person_score, score)	
+
+#@return true if group entity
+def check_group_entity(word):
+	plural_animate= ['people','society','goverments','students','communities','environments','administrators','friends']
+	plural_inanimate = ['cars','dates','problems','resources','vehicles','concepts','facts']
+	if (word in plural_animate or word in plural_inanimate):
+		return(True)
+	syn = wordnet.synsets(word, pos=wordnet.NOUN)
+	if(syn):
+		for item in syn:
+			lex_name = item.lexname()
+			if(lex_name == 'noun.group'):
+				return(True)
+		return(False)						#return false if noun.group doesn't exists	
+	else:
+		return(False)
+
+#@return true if a person
+def check_person_entity(word):
+	singular_animate = ['student','teacher',]
+	if (word in singular_animate):
+		return(True)
+	syn = wordnet.synsets(word)
+	if(syn):
+		syn = wordnet.synsets(word)[0]
+		lex_name = syn.lexname()
+		if(lex_name == 'noun.person'):
+			return(True)
+		else:
+			return(False)
+
+def check_gender(word):
+	female = ['female','feminine','woman','lady','girl','daughter','miss','maid',]
+	male = ['male','masculine','man','manlike','lad','son','master']
+	if (word in female):
+		return('female')
+	elif(word in male):
+		return('male')	
+	temp = wordnet.synsets(word)[0]
+	word_hyper = list(temp.closure(lambda s:s.hypernyms(),depth = 10))
+	for item in word_hyper:					#Checking occurence of male/female in definitions of its hypernyms
+		temp = item.definition()
+		temp_w = word_tokenize(temp)
+		for element in temp_w:
+			if (element.lower() in female):
+				return('female')
+			if (element.lower() in male):
+				return('male')
+	return('u')	
+
+#@returns a score b/w 0-1
+def third_sing_plural(sentences):
+	normalizer = 0
+	third_plural_words = ['they', 'themselves','their','them']
+	score1,norm1 = check_antecedant(sentences,third_plural_words)
+	masculine_words = ['he', 'him', 'his']
+	score2,norm2 = check_antecedant(sentences,masculine_words,gender = 'male')
+	feminine_words = ['she', 'her', 'hers']
+	score3,norm3 = check_antecedant(sentences,feminine_words, gender = 'female')
+	if (score1 == 0):		#only normalize if there is existance of those words
+		norm1 = 0
+	if(score2 == 0):
+		norm2 = 0
+	if(score3 == 0):
+		norm3 = 0
+	if ((norm1 + norm2 + norm3) == 0):
+		return(0)
+	else:
+		return((score1 + score2 + score3)/ (norm1 + norm2 + norm3))	 
+	return(final_score)
+
+def check_antecedant(sentences,list_word,gender= None):	
+	idx_list = []
+	for idx,sentence in enumerate(sentences):
+		words = word_tokenize(sentence)
+		for word in words:
+			if(word in list_word):
+				idx_list.append(idx)
+	#Check for antecedent
+	idx_list = set(idx_list)
+	if(len(idx_list) == 0):
+		normalize = 0			#in case no exixtance then dont normalize
+	else:
+		normalize = len(idx_list)
+	score = 0
+	if (gender == None):
+		for idx in idx_list:
+			if(not(antecedant_third_pl(sentences,idx))):
+				score += 1
+	else:
+		for idx in idx_list:
+			if (antecedant_third_sing(sentences,idx,gender) == False):
+				score += 1
+	if (normalize == 0):
+		return(0,0)
+	else:
+		return(score/normalize,normalize)		
+
+def antecedant_third_sing(sentences,idx,gender):
+	if (idx-2 < 0):       #Checking two sentences before the occurence of sentece      
+		sentence_list = sentences[0:idx+1][::-1]	
+	else:
+		sentence_list = sentences[idx-2:idx+1][::-1]
+	for ix,sentence in enumerate(sentence_list):
+		words = word_tokenize(sentence)
+		pos_tagged = pos_tag(words)
+		for element in pos_tagged:
+			word1 = element[0]
+			tag = element[1]
+			if(tag == 'NN'):
+				if(check_person_entity(word1)): #check if person
+					if (check_gender(word1) == gender):
+						return(True)
+					else:
+						return(False)  
+			if(tag == 'NNP'):			#In case a proper noun we use nltk dictionary
+				if(gender_label(word1) == 'u'):
+					return(None)
+				else:
+					if(gender_label(word1) == gender):
+						return(True)
+					else:
+						return(False)
+	return(False)			#In case no antecedant found		
+									
+#return true if entity exists
+def antecedant_third_pl(sentences,idx):	
+	if (idx-2 < 0):       #Checking two sentences before the occurence of sentece      
+		sentence_list = sentences[0:idx+1][::-1]	
+	else:
+		sentence_list = sentences[idx-2:idx+1][::-1]
+	for ix,sentence in enumerate(sentence_list):
+		words = word_tokenize(sentence)
+		pos_tagged = pos_tag(words)
+		for element in pos_tagged:
+			word1 = element[0]
+			tag = element[1]
+			if(tag == 'NNS'):
+				if(check_group_entity(word1)): #check compatible number
+					return(True)
+	return(False)	#In case no antecedant found	

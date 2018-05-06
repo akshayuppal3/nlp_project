@@ -9,8 +9,8 @@ import math
 import numpy as np
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus.reader.wordnet import WordNetError
-
-
+from utils import third_pers_plural
+from utils import third_sing_plural
 
 
 class EssayGrader:
@@ -256,14 +256,23 @@ class EssayGrader:
 
 	# A value between 1-5, 1 being the lowest and 5 the highest
 	def cohr_score(self, e):
-		# sing_score, plural_score = ut.third_pers_plural(e.text)
-		# score = (sing_score + plural_score) / 2
-		# score = 1 + (score * 4)
-		# #Changing to positive scale
-		# score = 5 - score
-		# print(score, e.grade)
-		score = 5
-		return round(score, 2)
+		sing_score, plural_score = third_pers_plural(e.text) #result returnded by JSON
+		score1 = (sing_score + plural_score) / 2
+		norm1 = score1
+		score2 = third_sing_plural(e.sentences) #rule based system for noun choerence
+		norm2 = score2
+		norm = 0
+		if ((norm1 + norm2) == 0):
+			return(0)
+		elif(norm1 == 0 or norm2 == 0):
+			norm = 1
+		else:
+			norm = 2	
+		score = ((score1 + score2) / norm)	
+		score = 1 - score  		#making it a psotive value
+		score = 1 + (score * 4)
+		#Changing to positive scale
+		return np.round(score, 2)
 
 
 	def _get_pos(self, words, pos_tags, regex):
