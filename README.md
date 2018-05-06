@@ -58,7 +58,7 @@ In this part we compute fragment penalty, incomplete sentence penalty, incorrect
 
 PART D(i)
 ==========
-For competition, we have not implemented this module and we will implement it for the final submission, all scores are constant
+For coherence part we first scan for third person singular (he/she) and check for the existence of antecedent in the previous sentence, and penalize if there doesn’t any masculine or feminine entity respectively. For checking entity we check its compatibile number using pos tag and verify if it’s a person entity by wordnet lexical lemma for NOUN.person entity. The gender of the entity is identified by looking at the all hypernyms of the word in wordnet. For third person plural (they, them etc.) if we identify any reference in the text we look for its antecedents in the previous two sentences, (using pos tag to return plural nouns (NNS)) if not found we penalize it. To identify plural entity as we use lexical lemma of wordnet to check for NOUN.group entity. We normalize all the scores returned by the unique coreference pairs. We finally augment the result returned by StanfordCoreNLP coreference module (coreference chains) and NER (for proper noun antecedant) and scale the desired final scores. 
 
 
 PART D(ii)
