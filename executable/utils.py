@@ -203,12 +203,13 @@ def third_pers_sing(text):
 	#Check for m/f antecendant
 	#Check if there is mention of male entity then there exits one
 	if (m_ref > 0):
+		# print(m_f_ent['m'])
 		if(m_f_ent['m'] == 0):
-			score += 1
+			score = score + m_ref
 	#Check if there is mention of male entity then there exits one
 	if (f_ref > 0):	
 		if(m_f_ent['f'] == 0):
-			score += 1
+			score = score + f_ref
 	#Normailze
 	if (score > 0):
 		if((m_ref + f_ref) > 0):
@@ -227,7 +228,6 @@ def third_pers_plural(text):
 	try:							#handling exception by Json
 		jsonresponse = json.loads(nlp.annotate(text, properties=props))
 		jsonresponse = (jsonresponse['corefs'])
-		#print(jsonresponse)
 		vaild_count = 0
 		score = 0
 		score_th_sing = 0
@@ -236,27 +236,34 @@ def third_pers_plural(text):
 			gender = value[0]['gender']   #referring to the first element(main entity) in coref chain 
 			number = value[0]['number']
 			animacy = value[0]['animacy']
-			text = value[0]['text']
+			text1 = value[0]['text']
+			sent_num = value[0]['sentNum']
+			possible_ante = 0
 			for element in value:  #list
-				if(element['text'] in third_plural_words): 
-				# or element['text'] in masculine_words
-				# or element['text'] in feminine_words):  #Check only in case we encounter third person plural(they)
+				if(element['text'].lower() in third_plural_words): 
 					vaild_count += 1
+					possible_ante += 1
+					if (possible_ante > 1): #Existance of more than one antecedent, check for ambigous
+						if (abs(element['sentNum'] - sent_num) > 3): #Taking it as max window of recency
+							score += 1 
+					else:
+						if (abs(element['sentNum'] - sent_num) > 2): # Window for recency for first sentece
+							score += 1 
 					#if(element['gender'] != 'UNKNOWN'): #Not checking with unknown gender
+					#Check for compatibility
 					if (element['gender'] != gender or element['number'] != number):
 						score += 1
 				#checking the reference of third person singular
-				if (element ['text'] in masculine_words or element['text'] in feminine_words):
+				if (element ['text'].lower() in masculine_words or element['text'].lower() in feminine_words):
 					third_person_normalize += 1
 					if (element['gender'] != gender or element['number'] != number):
 						score_th_sing += 1
 		#Update the third person singular scores if update found by coref
-		if(third_person_score == 0):
-			if(score_th_sing > 0):
-				if (third_person_normalize >0):  #check for div by zero
-					third_person_score = score_th_sing/ third_person_normalize
-			else:  #Keep it zero if nothing caught by coref
-				third_person_score = 0
+		if(score_th_sing > 0):
+			if (third_person_normalize >0):  #check for div by zero
+				third_person_score = score_th_sing/ third_person_normalize
+		else:  #Keep it zero if nothing caught by coref
+			third_person_score = 0
 
 		#normalize the score by no of occurence of third person plural words in the essay
 		if (vaild_count != 0):   #Handle div by zero error
@@ -265,7 +272,7 @@ def third_pers_plural(text):
 			score = score		
 	except ValueError:
 		score = 0		
-	return(third_person_score, score)	
+	return(third_person_score, score)		
 
 #@return true if group entity
 def check_group_entity(word):
