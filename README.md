@@ -9,7 +9,7 @@ Name 2: auppal8@uic.edu
 3) Navigate to ROOT/executable/resources/stanford-corenlp-full-2018-02-27 (The zip file you just extracted)
 3) Run the StanfordCoreNLP parser or port 8080 using the following command:
    
-   java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 8080 -timeout 15000
+   java -mx4g -cp "*" --add-modules java.se.ee edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 8080 -timeout 15000
    
 4) Open a new terminal window/tab
 5) Navigate to ROOT/executable folder
@@ -63,7 +63,7 @@ For coherence part we first scan for third person singular (he/she) and check fo
 
 PART D(ii)
 ==========
-In this part we compute Li distance in WordNet heirarchy between set of words found in topic prompt and set of words from the essay. We compare nouns with nouns and verbs with verbs. Adjectives and adverbs are not considered as they were not very discriminatory.
+In this part we compute Li distance in WordNet heirarchy between set of words found in topic prompt and set of words from the essay. We compare nouns with nouns and verbs with verbs. Adjectives and adverbs were evaluated but not included in the final results as they were not very discriminatory between high and low quality essays. We did not feel feel the need to include SUMO as wordnet heirarchy gives reasonable results.
 
 
 NOTE: For all of these scores, we can see the difference between low and high classes on average as reported in ROOT/output/results.txt included in the folder. With more data our probabilistic approach for part C(i) and C(ii) is expected to improve.
@@ -71,20 +71,19 @@ NOTE: For all of these scores, we can see the difference between low and high cl
 
 Final Score & Grade
 ====================
-A logistic regression classifier is trained on the dataset and probability of high class is multiplied with MAX_SCORE which is 55 to get final score. If the probability is above 0.5 then the 'high' label is assiged, 'low' otherwise
+A logistic regression classifier is trained on the dataset (features are scaled) and probability of high class is multiplied with MAX_SCORE which is 55 to get final score. If the probability is above 0.5 then the 'high' label is assiged, 'low' otherwise. This method produces scores which are sensitive to individual scores, however we do not need to deal with over or underflow in this case. We have also implemented but did not end up using the fixed weight scoring method.
 
 Weights
 =======
 The corresponding coefficients of logistic regression classifier are listed below:
-Length				2.6269878
-Spelling			-1.7054796
-SV agreement 		0.2984408
-Verb Score   		0.28998445
-Well-formedness		0.44888262,
-Coherence	        0.
-Topic				0.23091447
+
+Length				2.51636953
+Spelling			-1.70398222
+SV agreement 		0.31029736
+Verb Score   		0.42583281
+Well-formedness		0.30873521
+Coherence	        0.28791988
+Topic				0.20908499
 
 
-As expected, spelling has a negative weight due to negative scoring (it is a penalty). Coherece has a 0 weight because it is constant and not implemented. Length is our most important feature.
-
-
+As expected, spelling has a negative weight due to negative scoring (it is a penalty) and the rest of it is positive. Length is the most dominating feature.

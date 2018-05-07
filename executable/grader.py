@@ -271,7 +271,6 @@ class EssayGrader:
 		score = ((score1 + score2) / norm)	
 		score = 1 - score  		#making it a psotive value
 		score = 1 + (score * 4)
-		#Changing to positive scale
 		return np.round(score, 2)
 
 
@@ -361,8 +360,8 @@ class EssayGrader:
 						'sv_agr': 1,
 						'verb': 1,
 						'form': 2,
-						'cohr': 0,		# leaving it 0, change for part 2
-						'topic': 0,		# leaving it 0, change for part 2
+						'cohr': 2,
+						'topic': 3
 
 				}
 		score = 0

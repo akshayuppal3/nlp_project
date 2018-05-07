@@ -114,7 +114,7 @@ def check_gender(word):
 
 #@return no of male and female entities @params: text
 def named_entities(text):
-	nlp = StanfordCoreNLP('http://corenlp.run', port=80) #To be changes afterwards
+	nlp = StanfordCoreNLP('http://localhost', port=8080) #To be changes afterwards
 	feminine_words = ['she', 'her', 'hers']
 	masculine_words = ['he', 'him', 'his']
 	props = {'annotators': 'ner,pos'} # tokenize,ssplit,pos,lemma,
@@ -218,7 +218,7 @@ def third_pers_sing(text):
 
 #@return third_person_sing score between 0-1 @params text
 def third_pers_plural(text):
-	nlp = StanfordCoreNLP('http://corenlp.run', port=80) #To be changes afterwards
+	nlp = StanfordCoreNLP('http://localhost', port=8080) #To be changes afterwards
 	third_plural_words = ['they', 'themselves','their','them']
 	masculine_words = ['he', 'him', 'his']
 	feminine_words = ['she', 'her', 'hers']

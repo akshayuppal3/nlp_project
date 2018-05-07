@@ -7,3 +7,4 @@ def setup_env():
 	nltk.download('punkt')
 	nltk.download('wordnet_ic')
 	nltk.download('stopwords')
+	nltk.download('names')

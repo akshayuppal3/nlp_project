@@ -38,7 +38,7 @@ def label_eval_test(input_dir, output_dir, model_dir, evaluate):
 		if evaluate:
 			ground_truth.append(record['grade'])
 
-	print("Grading essays...")
+	print("Grading essays (this might take a while)...")
 	results = []
 	grader = EssayGrader(model_dir)
 	for idx in tqdm(range(len(index))):
@@ -85,7 +85,7 @@ def train(input_dir, output_dir, model_dir):
 
 
 	# Grade essays
-	print("Grading essays...")
+	print("Grading essays (this might take a while)...")
 	results = []
 	grader = EssayGrader(model_dir)
 	for idx in tqdm(range(len(essays))):
@@ -162,13 +162,17 @@ def main():
 
 
 	setup_env()
+	print('\n')
+	print("=" * 80)
+	print("""NOTE: Ensure that the server is running on port 8080 with the parameters specified in README file. The following command should be used to run the server, it will not work otherwise:\n{0}""".format(
+					'java -mx4g -cp "*" --add-modules java.se.ee edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 8080 -timeout 15000\n'))
+
 	if args.function == 'test':
 		label_eval_test(args.input_dir, args.output_dir, args.model_dir, args.evaluate)	
 	else:
 		train(args.input_dir, args.output_dir, args.model_dir)
 
 if __name__ == '__main__':
-
 	# Some global constants
 	ESSAY_DIR = 'essays'
 	IDX_FILE = 'index.csv'
